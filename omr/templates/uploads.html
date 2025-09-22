@@ -2,10 +2,10 @@
 <html>
     <head>
         <meta charset="utf-8" />
-        <title>Upload OMR / Answer Key</title>
+        <title>OMR Evaluation</title>
     </head>
     <body>
-        <h1>Upload</h1>
+        <h1>OMR Evaluation</h1>
 
         {% if messages %}
         <ul>
@@ -15,31 +15,56 @@
         </ul>
         {% endif %}
 
-        <form method="post" enctype="multipart/form-data">
+        <!-- Section 1: Upload Sheet PDFs -->
+        <h2>1. Upload Sheet PDFs</h2>
+        <form method="post" enctype="multipart/form-data" action="{% url 'upload_file' %}">
             {% csrf_token %}
-            {{ form.non_field_errors }}
+            <input type="hidden" name="file_type" value="sheet">
             <div>
-                {{ form.file.label_tag }} {{ form.file }}
-                {{ form.file.errors }}
+                <label for="id_sheet_file">Choose Sheet PDF:</label>
+                <input type="file" name="file" id="id_sheet_file" required>
             </div>
-            <div>
-                {{ form.file_type.label_tag }} {{ form.file_type }}
-                {{ form.file_type.errors }}
-            </div>
-            <button type="submit">Upload</button>
+            <button type="submit">Upload Sheet</button>
         </form>
 
+        <!-- Section 2: Upload Answer Key -->
+        <h2>2. Upload Answer Key</h2>
+        <form method="post" enctype="multipart/form-data" action="{% url 'upload_file' %}">
+            {% csrf_token %}
+            <input type="hidden" name="file_type" value="answer_key">
+            <div>
+                <label for="id_answer_file">Choose Answer Key File:</label>
+                <input type="file" name="file" id="id_answer_file" required>
+            </div>
+            <button type="submit">Upload Answer Key</button>
+        </form>
 
-        <h2>Recent uploads</h2>
-        <ul>
-            {% for f in recent %}
-            <li>
-                {{ f.uploaded_at }} — {{ f.file_type }} —
-                <a href="{{ f.file.url }}" target="_blank">{{ f.file.name|slice:":60" }}</a>
-            </li>
-            {% empty %}
-            <li>No uploads yet.</li>
-            {% endfor %}
-        </ul>
+        <!-- Section 3: Select Uploaded Files -->
+        <h2>3. Select Files to Process</h2>
+        <form method="post" action="{% url 'evaluate' %}">
+            {% csrf_token %}
+            <div>
+                <label for="sheet_select">Select Sheet PDFs:</label>
+                <select name="sheet_files" id="sheet_select" multiple required>
+                    {% for f in recent %}
+                        {% if f.file_type == "sheet" %}
+                            <option value="{{ f.file.path }}">{{ f.file.name }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="answer_select">Select Answer Key:</label>
+                <select name="answer_file" id="answer_select" required>
+                    {% for f in recent %}
+                        {% if f.file_type == "answer_key" %}
+                            <option value="{{ f.file.path }}">{{ f.file.name }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit">Start Processing</button>
+        </form>
     </body>
 </html>
+

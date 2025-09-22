@@ -3,23 +3,10 @@ from django.core.exceptions import ValidationError
 from .models import UploadedFile
 import os
 
-MAX_UPLOAD_MB = 20  # change if needed
-
-VALID_EXTS = {
-    'OMR': ['.pdf', '.zip'],
-    'KEY': ['.csv'],
-}
-
-# omr/forms.py
-from django import forms
-from django.core.exceptions import ValidationError
-from .models import UploadedFile
-import os
-
 MAX_UPLOAD_MB = 20  # adjust
 VALID_EXTS = {
-    'OMR': ['.pdf', '.zip'],
-    'KEY': ['.csv'],
+    'sheet': ['.pdf', '.zip'],
+    'answer_key': ['.csv', '.xlsx']
 }
 
 class UploadedFileForm(forms.ModelForm):
@@ -44,8 +31,12 @@ class UploadedFileForm(forms.ModelForm):
         allowed = VALID_EXTS.get(file_type, [])
         if ext not in allowed:
             raise ValidationError({
-                'file': f"Invalid extension {ext} for {file_type}. Allowed: {', '.join(allowed)}"
+                'file': (
+                    f"Invalid extension {ext} for {file_type}. "
+                    f"Allowed types: {', '.join(allowed)}"
+                )
             })
+
 
         # Size check
         if uploaded.size > MAX_UPLOAD_MB * 1024 * 1024:
