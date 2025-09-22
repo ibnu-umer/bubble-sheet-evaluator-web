@@ -25,17 +25,17 @@
     - `views.py`
     - `urls.py`
     - `forms.py`
+    - `constants.py`
     - `tests/`
       - `__init__.py`
       - `test_models.py`
       - `test_views.py`
       - `test_processing.py`
-  - `processing/`
-    - `__init__.py`
-    - `bubble_detector.py`
-    - `sheet_parser.py`
-    - `ocr_reader.py`
-    - `evaluator.py`
+    - `processing/`
+      - `__init__.py`
+      - `pdf_utils.py`
+      - `qr_utils.py`
+      - `evaluator.py`
   - `exports/`
     - `__init__.py`
     - `excel_exporter.py`
@@ -43,6 +43,7 @@
   - `media/`
     - `uploads/`
     - `processed/`
+    - `results/`
   - `scripts/`
     - `seed_data.py`
     - `maintenance.py`
