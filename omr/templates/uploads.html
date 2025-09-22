@@ -1,1 +1,45 @@
-<h1>Upload Files</h1>
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Upload OMR / Answer Key</title>
+    </head>
+    <body>
+        <h1>Upload</h1>
+
+        {% if messages %}
+        <ul>
+            {% for m in messages %}
+            <li>{{ m }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            <div>
+                {{ form.file.label_tag }} {{ form.file }}
+                {{ form.file.errors }}
+            </div>
+            <div>
+                {{ form.file_type.label_tag }} {{ form.file_type }}
+                {{ form.file_type.errors }}
+            </div>
+            <button type="submit">Upload</button>
+        </form>
+
+
+        <h2>Recent uploads</h2>
+        <ul>
+            {% for f in recent %}
+            <li>
+                {{ f.uploaded_at }} — {{ f.file_type }} —
+                <a href="{{ f.file.url }}" target="_blank">{{ f.file.name|slice:":60" }}</a>
+            </li>
+            {% empty %}
+            <li>No uploads yet.</li>
+            {% endfor %}
+        </ul>
+    </body>
+</html>
