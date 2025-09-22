@@ -12,6 +12,13 @@ def ensure_dir(path):
 
 
 def pdf_to_images(pdf_path, dpi=PDF_DPI, save_path=CONVERTED_IMG_PATH):
+    """
+    Convert a PDF containing OMR sheets into image files and extract student data.
+    Saves each page as a PNG file, named with the student's roll number in save_path.
+    Returns:
+        list[dict]: A list of student metadata dictionaries, one per PDF page.
+                    Example: [{'roll': '12345', 'name': 'Alice'}, ...]
+    """
     images = convert_from_path(pdf_path, dpi=dpi, poppler_path=POPPLER_PATH)
     ensure_dir(save_path)
     students_data = []
