@@ -9,8 +9,8 @@ from omr.constants import (
 
 
 
-def load_answers():
-    with open('answers.json', 'r') as file:
+def load_answers(path):
+    with open(path, 'r') as file:
         answers = json.load(file)
     return answers
 
@@ -127,23 +127,23 @@ def group_and_evaluate(circles, img_name=None):
     return result
 
 
-def evaluate_sheet(responses, student_data):
-    answers = load_answers()  # Loading in each coz multithreading didn't share variables
-    score = sum(1 for q, a in responses.items() if answers.get(str(q)) == a)
+def evaluate_sheet(responses, student_data, answer_keys):
+    # answers = load_answers()  # Loading in each coz multithreading didn't share variables
+    score = sum(1 for q, a in responses.items() if answer_keys.get(str(q)) == a)
     student_data['score'] = score
 
     print(f"Student: {student_data.get('name')} {student_data.get('roll')}\nScore: {score}/40\n")
     return student_data
 
 
-def process_sheet(img_filename, student_data):
+def process_sheet(img_filename, student_data, answer_keys):
     img_path = f'{CONVERTED_IMG_PATH}/{img_filename}'
     cropped = detect_corner_markers(img_path)
     if cropped is not None:
         img_name = img_filename.split('.')[0]
         bubbles = detect_bubbles(cropped, img_name=img_name)
         results = group_and_evaluate(bubbles, img_name=img_name)
-        student_info = evaluate_sheet(results, student_data)
+        student_info = evaluate_sheet(results, student_data, answer_keys)
     else:
         return f"Failed to process: {img_filename}"
 

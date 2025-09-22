@@ -3,7 +3,7 @@ from django.contrib import messages
 from .forms import UploadedFileForm
 from .models import UploadedFile
 from .processing.pdf_utils import pdf_to_images, ensure_dir
-from .processing.evaluator import process_sheet, save_results_to_csv
+from .processing.evaluator import process_sheet, save_results_to_csv, load_answers
 from .constants import RESULT_IMG_PATH, CONVERTED_IMG_PATH
 import os
 
@@ -25,7 +25,8 @@ def upload_file(request):
     return render(request, 'uploads.html', {'form': form, 'recent': recent})
 
 
-def process_sheets(pdf_path):
+
+def evaluate(request, pdf_path, answer_key_path):
     """
     End-to-end pipeline to process OMR sheets from a PDF.
 
@@ -47,7 +48,11 @@ def process_sheets(pdf_path):
     sheet_files = os.listdir(CONVERTED_IMG_PATH)
 
     final_results = []
+    answer_keys = load_answers(answer_key_path)
     for student_data, sheet_file in zip(students_data, sheet_files):
-        final_results.append(process_sheet(sheet_file, student_data))
-    return save_results_to_csv(final_results) # result sheet path
+
+        final_results.append(process_sheet(sheet_file, student_data, answer_keys))
+    save_results_to_csv(final_results) # result sheet path
+
+    return render(request, "evaluate.html")
 
