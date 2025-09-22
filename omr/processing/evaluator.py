@@ -3,7 +3,9 @@ import cv2
 import json
 import csv
 import numpy as np
-from omr.constants import RESULT_IMG_PATH, MEAN_INTENSITY_THRESHOLD, OPTIONS, RESULT_SHEET_PATH
+from omr.constants import (
+    RESULT_IMG_PATH, MEAN_INTENSITY_THRESHOLD, OPTIONS, RESULT_SHEET_PATH, CONVERTED_IMG_PATH
+)
 
 
 
@@ -134,8 +136,8 @@ def evaluate_sheet(responses, student_data):
     return student_data
 
 
-def process_one_sheet(img_filename, student_data):
-    img_path = f'answered_sheets/converted_sheets/{img_filename}'
+def process_sheet(img_filename, student_data):
+    img_path = f'{CONVERTED_IMG_PATH}/{img_filename}'
     cropped = detect_corner_markers(img_path)
     if cropped is not None:
         img_name = img_filename.split('.')[0]
@@ -161,4 +163,4 @@ def save_results_to_csv(results):
         writer = csv.DictWriter(f, fieldnames=keys)
         writer.writeheader()
         writer.writerows(sorted_results)
-    print(f"Results saved to {RESULT_SHEET_PATH}")
+    return RESULT_SHEET_PATH
