@@ -10,9 +10,27 @@ from omr.constants import (
 
 
 def load_answers(path):
-    with open(path, 'r') as file:
-        answers = json.load(file)
-    return answers
+    if path.endswith(".json"):
+        # Load answers from JSON file
+        with open(path, "r") as file:
+            answers = json.load(file)
+        return answers
+
+    elif path.endswith(".csv"):
+        # Load answers from CSV file
+        answers = {}
+        with open(path, newline='', encoding="utf-8") as file:
+            reader = csv.reader(file)
+            # CSV format: question_number, answer
+            for row in reader:
+                if len(row) >= 2:
+                    question, answer = row[0].strip(), row[1].strip()
+                    answers[question] = answer
+        return answers
+
+    else:
+        raise ValueError("Unsupported file format. Please use .json or .csv")
+
 
 
 def detect_corner_markers(image_path):
