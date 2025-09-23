@@ -135,20 +135,21 @@ def evaluate_sheet(responses, student_data, answer_keys):
     print(f"Student: {student_data.get('name')} {student_data.get('roll')}\nScore: {score}/40\n")
     return student_data
 
-
+import time
 def process_sheet(img_filename, student_data, answer_keys):
-    img_path = f'{CONVERTED_IMG_PATH}/{img_filename}'
-    cropped = detect_corner_markers(img_path)
-    if cropped is not None:
-        img_name = img_filename.split('.')[0]
-        bubbles = detect_bubbles(cropped, img_name=img_name)
-        results = group_and_evaluate(bubbles, img_name=img_name)
-        student_info = evaluate_sheet(results, student_data, answer_keys)
-    else:
-        return f"Failed to process: {img_filename}"
+    # img_path = f'{CONVERTED_IMG_PATH}/{img_filename}'
+    # cropped = detect_corner_markers(img_path)
+    # if cropped is not None:
+    #     img_name = img_filename.split('.')[0]
+    #     bubbles = detect_bubbles(cropped, img_name=img_name)
+    #     results = group_and_evaluate(bubbles, img_name=img_name)
+    #     # student_info = evaluate_sheet(results, student_data, answer_keys)
+    # else:
+    #     return f"Failed to process: {img_filename}"
 
-    os.remove(img_path)
-    return student_info
+    # os.remove(img_path)
+    time.sleep(0.2)
+    return True # student_info
 
 
 def save_results_to_csv(results):

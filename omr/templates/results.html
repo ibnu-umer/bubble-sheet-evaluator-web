@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Evaluation Results</title>
+</head>
+<body>
+    <h2>Evaluation Results</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Roll</th>
+                <th>Score</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in results %}
+            <tr>
+                <td>{{ row.roll }}</td>
+                <td>{{ row.score }}</td>
+                <td>{{ row.status }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

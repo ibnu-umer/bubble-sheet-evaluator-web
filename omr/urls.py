@@ -3,5 +3,6 @@ from . import views
 
 urlpatterns = [
     path('', views.upload_file, name='upload_file'),
-    path('process_ajax/', views.process_ajax, name='process_ajax')
+    path('process_ajax/', views.process_ajax, name='process_ajax'),
+    path("results/<uuid:task_id>/", views.results_view, name="results_page"),
 ]

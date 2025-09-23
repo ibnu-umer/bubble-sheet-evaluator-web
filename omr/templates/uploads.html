@@ -88,8 +88,7 @@
                     {% endfor %}
                 </select>
             </div>
-            <button type="submit" onclick="startProcessing(event)">Start Processing</button>
-
+            <button type="button" onclick="startProcessing(event)">Start Processing</button>
         </form>
 
         <h1>Processing Sheets</h1>
@@ -97,8 +96,7 @@
             <div id="progress-bar">0%</div>
         </div>
 
-        <button>Show Results</button>
-
+        <div id="results" style="display:none;"></div>
 
         <script>
             async function startProcessing(event) {
@@ -112,13 +110,43 @@
                     headers: {
                         "X-CSRFToken": "{{ csrf_token }}",
                     },
-
                     body: formData
                 });
 
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
                 let buffer = "";
+
+                function handleData(data) {
+                    console.log("handleData called with:", data);
+                    // progress bar update
+                    if (data.progress !== undefined) {
+                        const bar = document.getElementById("progress-bar");
+                        if (bar) {
+                            bar.style.width = data.progress + "%";
+                            bar.innerText = data.progress + "%";
+                        }
+                    }
+
+                    // results button
+                    if (data.results_id) {
+                        const resultsDiv = document.getElementById("results");
+                        if (!resultsDiv) {
+                            console.error("No #results div found!");
+                            return;
+                        }
+
+                        resultsDiv.style.display = "block";
+                        resultsDiv.innerHTML = `
+                            <p>Processing completed successfully!</p>
+                            <a href="/results/${data.results_id}/" class="btn btn-primary">
+                                View Results
+                            </a>
+                        `;
+                    }
+
+                    console.log("Chunk received:", data);
+                }
 
                 while (true) {
                     const { done, value } = await reader.read();
@@ -127,39 +155,30 @@
                     buffer += decoder.decode(value, { stream: true });
 
                     let parts = buffer.split("\n");
-                    buffer = parts.pop(); // keep incomplete chunk for next iteration
+                    buffer = parts.pop();
 
                     for (let part of parts) {
                         if (!part.trim()) continue;
                         try {
                             const data = JSON.parse(part);
-
-                            if (data.progress !== undefined) {
-                                document.getElementById("progress-bar").style.width = data.progress + "%";
-                                document.getElementById("progress-bar").innerText = data.progress + "%";
-                            }
-
-                            if (data.results) {
-                                document.getElementById("results").style.display = "block";
-                                const tbody = document.querySelector("#results-table tbody");
-                                tbody.innerHTML = "";
-                                data.results.forEach(row => {
-                                    tbody.innerHTML += `<tr>
-                                        <td>${row.roll}</td>
-                                        <td>${row.score}</td>
-                                        <td>${row.status}</td>
-                                    </tr>`;
-                                });
-                            }
+                            handleData(data);
                         } catch (e) {
-                            console.error("Failed to parse chunk:", part);
+                            console.error("Failed to parse chunk:", part, e);
                         }
                     }
                 }
 
+                // process leftover
+                if (buffer.trim()) {
+                    try {
+                        const data = JSON.parse(buffer);
+                        handleData(data);
+                    } catch (e) {
+                        console.error("Failed to parse leftover:", buffer, e);
+                    }
+                }
             }
 
-            startProcessing(event);
         </script>
     </body>
 </html>
