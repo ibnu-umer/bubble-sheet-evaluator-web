@@ -153,21 +153,49 @@ def evaluate_sheet(responses, student_data, answer_keys):
     print(f"Student: {student_data.get('name')} {student_data.get('roll')}\nScore: {score}/40\n")
     return student_data
 
-import time
-def process_sheet(img_filename, student_data, answer_keys):
-    # img_path = f'{CONVERTED_IMG_PATH}/{img_filename}'
-    # cropped = detect_corner_markers(img_path)
-    # if cropped is not None:
-    #     img_name = img_filename.split('.')[0]
-    #     bubbles = detect_bubbles(cropped, img_name=img_name)
-    #     results = group_and_evaluate(bubbles, img_name=img_name)
-    #     # student_info = evaluate_sheet(results, student_data, answer_keys)
-    # else:
-    #     return f"Failed to process: {img_filename}"
 
-    # os.remove(img_path)
-    time.sleep(0.2)
-    return True # student_info
+
+def process_sheet(img_filename, student_data, answer_keys):
+    """
+    Process a single OMR sheet image:
+    - Detects corner markers
+    - Extracts bubbles
+    - Groups and evaluates answers
+    - Returns student info result
+
+    Args:
+        img_filename (str): Path or filename of the sheet image.
+        student_data (dict): Metadata for the student.
+        answer_keys (dict): Correct answers for evaluation.
+
+    Returns:
+        dict | str: Processed student info or error message.
+    """
+    try:
+        img_path = os.path.join(CONVERTED_IMG_PATH, img_filename)
+
+        # detect corners and crop sheet
+        cropped = detect_corner_markers(img_path)
+        if cropped is None:
+            return {"error": f"Failed to process {img_filename}"}
+
+        img_name = os.path.splitext(img_filename)[0]
+        bubbles = detect_bubbles(cropped, img_name=img_name)
+
+        # evaluate sheet
+        results = group_and_evaluate(bubbles, img_name=img_name)
+        student_info = evaluate_sheet(results, student_data, answer_keys)
+
+        # Cleanup: remove temporary image to save space
+        try:
+            os.remove(img_path)
+        except FileNotFoundError:
+            pass
+
+        return student_info
+    except:
+        return img_filename
+
 
 
 def save_results_to_csv(results):
