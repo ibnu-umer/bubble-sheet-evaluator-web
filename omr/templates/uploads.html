@@ -3,6 +3,31 @@
     <head>
         <meta charset="utf-8" />
         <title>OMR Evaluation</title>
+        <style>
+            #progress-container {
+                width: 100%;
+                background: #eee;
+                border-radius: 5px;
+                margin: 20px 0;
+            }
+            #progress-bar {
+                width: 0;
+                height: 25px;
+                background: #4caf50;
+                text-align: center;
+                color: white;
+                border-radius: 5px;
+            }
+            #results {
+                margin-top: 20px;
+                display: none;
+            }
+            table, th, td {
+                border: 1px solid black;
+                border-collapse: collapse;
+                padding: 5px;
+            }
+        </style>
     </head>
     <body>
         <h1>OMR Evaluation</h1>
@@ -41,7 +66,7 @@
 
         <!-- Section 3: Select Uploaded Files -->
         <h2>3. Select Files to Process</h2>
-        <form method="post" action="{% url 'evaluate' %}">
+        <form method="post" id="process-form">
             {% csrf_token %}
             <div>
                 <label for="sheet_select">Select Sheet PDFs:</label>
@@ -63,8 +88,79 @@
                     {% endfor %}
                 </select>
             </div>
-            <button type="submit">Start Processing</button>
+            <button type="submit" onclick="startProcessing(event)">Start Processing</button>
+
         </form>
+
+        <h1>Processing Sheets</h1>
+        <div id="progress-container">
+            <div id="progress-bar">0%</div>
+        </div>
+
+        <button>Show Results</button>
+
+
+        <script>
+            async function startProcessing(event) {
+                event.preventDefault(); // stop the form's normal submit
+
+                const form = document.getElementById("process-form");
+                const formData = new FormData(form);
+
+                const response = await fetch("{% url 'process_ajax' %}", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}",
+                    },
+
+                    body: formData
+                });
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = "";
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+
+                    let parts = buffer.split("\n");
+                    buffer = parts.pop(); // keep incomplete chunk for next iteration
+
+                    for (let part of parts) {
+                        if (!part.trim()) continue;
+                        try {
+                            const data = JSON.parse(part);
+
+                            if (data.progress !== undefined) {
+                                document.getElementById("progress-bar").style.width = data.progress + "%";
+                                document.getElementById("progress-bar").innerText = data.progress + "%";
+                            }
+
+                            if (data.results) {
+                                document.getElementById("results").style.display = "block";
+                                const tbody = document.querySelector("#results-table tbody");
+                                tbody.innerHTML = "";
+                                data.results.forEach(row => {
+                                    tbody.innerHTML += `<tr>
+                                        <td>${row.roll}</td>
+                                        <td>${row.score}</td>
+                                        <td>${row.status}</td>
+                                    </tr>`;
+                                });
+                            }
+                        } catch (e) {
+                            console.error("Failed to parse chunk:", part);
+                        }
+                    }
+                }
+
+            }
+
+            startProcessing(event);
+        </script>
     </body>
 </html>
 
