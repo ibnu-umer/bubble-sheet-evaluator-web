@@ -3,14 +3,13 @@ from django.contrib import messages
 from .forms import UploadedFileForm
 from .models import UploadedFile
 from .processing.pdf_utils import pdf_to_images
-from .processing.evaluator import process_sheet
-from .constants import RESULT_IMG_PATH, CONVERTED_IMG_PATH
+from .processing.evaluator import process_sheet, load_answers
+from .constants import CONVERTED_IMG_PATH
 import os
 from django.http import StreamingHttpResponse, JsonResponse, HttpResponse
 import json
 from django.core.cache import cache
 import uuid
-from django.urls import reverse
 
 
 
@@ -37,27 +36,46 @@ def process_ajax(request):
         answer_file = request.POST.get("answer_file")
 
         def stream():
-            students_data = pdf_to_images(sheet_files[0])  # only taking first file for testing
-            sheet_files_local = os.listdir(CONVERTED_IMG_PATH)
-
             final_results = []
             task_id = str(uuid.uuid4())
-            total = len(sheet_files_local)
+            answer_keys = load_answers(answer_file)
 
-            for i, (student_data, sheet_file) in enumerate(zip(students_data, sheet_files_local), 1):
-                result = process_sheet(sheet_file, student_data, answer_keys=None)
-                final_results.append(result)
+            # Collect all students_data from all PDFs
+            all_students_data = []
+            all_sheet_files = []
 
+            for sheet_file in sheet_files:
+                students_data = pdf_to_images(sheet_file)
+                sheet_files_local = os.listdir(CONVERTED_IMG_PATH)
+
+                # Match each image/student with its file
+                all_students_data.extend(students_data)
+                all_sheet_files.extend(sheet_files_local)
+
+            total = len(all_students_data)
+            errored_files = []
+
+            # Process each sheet
+            for i, (student_data, sheet_file) in enumerate(zip(all_students_data, all_sheet_files), 1):
+                result = process_sheet(sheet_file, student_data, answer_keys=answer_keys)
+                if type(result) == str:
+                    errored_files.append(result)
+                else:
+                    final_results.append(result)
+
+                # Stream progress update
                 progress = int((i / total) * 100)
                 yield json.dumps({"progress": progress}) + "\n"
 
             # Save results temporarily (10 min)
-            cache.set(task_id, final_results, timeout=600)
+            cache.set(
+                task_id,
+                {"results": final_results, "errors": errored_files},
+                timeout=600
+            )
 
-            # send results_id instead of redirect_url
-            yield json.dumps({
-                "results_id": task_id
-            }) + "\n"
+            # Send results_id at the end
+            yield json.dumps({"results_id": task_id}) + "\n"
 
         return StreamingHttpResponse(stream(), content_type="application/json")
 
@@ -67,10 +85,22 @@ def process_ajax(request):
 
 
 
+
 def results_view(request, task_id):
-    results = cache.get(str(task_id))
-    if not results:
+    cached_data = cache.get(str(task_id))
+
+    if cached_data:
+        final_results = cached_data.get("results", [])
+        errored_files = cached_data.get("errors", [])
+    else:
+        final_results = []
+        errored_files = []
+
+    if not final_results:
         return HttpResponse("No results found or expired", status=404)
 
-    return render(request, "results.html", {"results": results})
+    return render(request, "results.html", {
+        "results": final_results,
+        "error": errored_files
+    })
 
