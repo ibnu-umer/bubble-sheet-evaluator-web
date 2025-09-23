@@ -2,10 +2,12 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from .forms import UploadedFileForm
 from .models import UploadedFile
-from .processing.pdf_utils import pdf_to_images, ensure_dir
-from .processing.evaluator import process_sheet, save_results_to_csv, load_answers
+from .processing.pdf_utils import pdf_to_images
+from .processing.evaluator import process_sheet
 from .constants import RESULT_IMG_PATH, CONVERTED_IMG_PATH
 import os
+from django.http import StreamingHttpResponse, JsonResponse
+import json
 
 
 
@@ -26,33 +28,32 @@ def upload_file(request):
 
 
 
-def evaluate(request, pdf_path, answer_key_path):
-    """
-    End-to-end pipeline to process OMR sheets from a PDF.
+def process_ajax(request):
+    print(request.POST)
+    if request.method == "POST":
+        sheet_files = request.POST.getlist("sheet_files")
+        print("****", sheet_files)
+        answer_file = request.POST.get("answer_file")
+        print(sheet_files, answer_file)
 
-    Steps:
-        1. Converts PDF pages to images.
-        2. Extracts student data (e.g., roll number) from QR codes on each sheet.
-        3. Ensures the result images directory exists.
-        4. Iterates through each converted sheet and processes answers.
-        5. Aggregates results for all students and saves them into a CSV file.
+        def stream():
+            students_data = pdf_to_images(sheet_files[0])  # only taking first file for testing
+            sheet_files_local = os.listdir(CONVERTED_IMG_PATH)
 
-    Args:
-        pdf_path (str): Path to the input PDF containing scanned OMR sheets.
+            final_results = []
+            total = len(sheet_files_local)
 
-    Returns:
-        str: File path of the generated results CSV.
-    """
-    students_data = pdf_to_images(pdf_path)
-    ensure_dir(RESULT_IMG_PATH)
-    sheet_files = os.listdir(CONVERTED_IMG_PATH)
+            for i, (student_data, sheet_file) in enumerate(zip(students_data, sheet_files_local), 1):
+                print(i)
+                result = process_sheet(sheet_file, student_data, answer_keys=None)
+                final_results.append(result)
 
-    final_results = []
-    answer_keys = load_answers(answer_key_path)
-    for student_data, sheet_file in zip(students_data, sheet_files):
+                progress = int((i / total) * 100)
+                yield json.dumps({"progress": progress}) + "\n"
 
-        final_results.append(process_sheet(sheet_file, student_data, answer_keys))
-    save_results_to_csv(final_results) # result sheet path
+            # send results at the end
+            yield json.dumps({"results": final_results}) + "\n"
 
-    return render(request, "evaluate.html")
+        return StreamingHttpResponse(stream(), content_type="application/json")
 
+    return JsonResponse({"error": "Invalid request"}, status=400)
