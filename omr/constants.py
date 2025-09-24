@@ -5,3 +5,4 @@ CONVERTED_IMG_PATH = 'media/processed/sheet_images/'
 RESULT_IMG_PATH = 'media/processed/marked_images/results/'
 RESULT_SHEET_PATH = 'media/results/results.csv'
 OPTIONS = ['A', 'B', 'C', 'D']
+PASS_MARK = 10

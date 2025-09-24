@@ -4,7 +4,7 @@ from .forms import UploadedFileForm
 from .models import UploadedFile
 from .processing.pdf_utils import pdf_to_images
 from .processing.evaluator import process_sheet, load_answers
-from .constants import CONVERTED_IMG_PATH
+from .constants import CONVERTED_IMG_PATH, PASS_MARK
 import os
 from django.http import StreamingHttpResponse, JsonResponse, HttpResponse
 import json
@@ -98,6 +98,10 @@ def results_view(request, task_id):
 
     if not final_results:
         return HttpResponse("No results found or expired", status=404)
+
+    # add status to the final results
+    for result in final_results:
+        result["status"] = "Pass" if result.get("score") > PASS_MARK else "Fail"
 
     return render(request, "results.html", {
         "results": final_results,
