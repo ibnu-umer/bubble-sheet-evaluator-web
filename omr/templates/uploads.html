@@ -40,6 +40,9 @@
         </ul>
         {% endif %}
 
+        <h2>Enter Exam Name</h2>
+        <input id="exam-name" type="text">
+
         <!-- Section 1: Upload Sheet PDFs -->
         <h2>1. Upload Sheet PDFs</h2>
         <form method="post" enctype="multipart/form-data" action="{% url 'upload_file' %}">
@@ -102,8 +105,10 @@
             async function startProcessing(event) {
                 event.preventDefault(); // stop the form's normal submit
 
+                const exam_name = document.getElementById("exam-name").value;
                 const form = document.getElementById("process-form");
                 const formData = new FormData(form);
+                formData.append("examName", exam_name)
 
                 const response = await fetch("{% url 'process_ajax' %}", {
                     method: "POST",

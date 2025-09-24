@@ -34,6 +34,7 @@ def process_ajax(request):
     if request.method == "POST":
         sheet_files = request.POST.getlist("sheet_files")
         answer_file = request.POST.get("answer_file")
+        exam_name = request.POST.get("examName")
 
         def stream():
             final_results = []
@@ -70,7 +71,7 @@ def process_ajax(request):
             # Save results temporarily (10 min)
             cache.set(
                 task_id,
-                {"results": final_results, "errors": errored_files},
+                {"results": final_results, "errors": errored_files, "examName": exam_name},
                 timeout=600
             )
 
@@ -88,6 +89,7 @@ def process_ajax(request):
 
 def results_view(request, task_id):
     cached_data = cache.get(str(task_id))
+    exam_name = cached_data.get("examName", "Examination").upper
 
     if cached_data:
         final_results = cached_data.get("results", [])
@@ -105,6 +107,7 @@ def results_view(request, task_id):
 
     return render(request, "results.html", {
         "results": final_results,
-        "error": errored_files
+        "error": errored_files,
+        "examName": exam_name
     })
 
