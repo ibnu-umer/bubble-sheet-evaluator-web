@@ -42,7 +42,7 @@
 
         <!-- Section 1: Upload Sheet PDFs -->
         <h2>1. Upload Sheet PDFs</h2>
-        <form method="post" enctype="multipart/form-data" action="{% url 'upload_file' %}">
+        <form method="post" enctype="multipart/form-data" action="{% url 'evaluator' %}">
             {% csrf_token %}
             <input type="hidden" name="file_type" value="sheet">
             <div>
@@ -52,9 +52,9 @@
             <button type="submit">Upload Sheet</button>
         </form>
 
-        <!-- Section 2: Upload Answer Key -->
+        <!-- Section 2: Upload Answer Key -->  
         <h2>2. Upload Answer Key</h2>
-        <form method="post" enctype="multipart/form-data" action="{% url 'upload_file' %}">
+        <form method="post" enctype="multipart/form-data" action="{% url 'evaluator' %}">
             {% csrf_token %}
             <input type="hidden" name="file_type" value="answer_key">
             <div>
