@@ -42,8 +42,10 @@
     - `csv_exporter.py`
   - `media/`
     - `uploads/`
-    - `processed/`
-    - `results/`
+    - `exams/`
+      - `converted/`
+      - `evaluated/`
+      - `result`
   - `scripts/`
     - `seed_data.py`
     - `maintenance.py`
@@ -51,6 +53,7 @@
     - `__init__.py`
     - `test_end_to_end.py`
   - `.env.example`
+  - `poppler/`
   - `.gitignore`
   - `docker-compose.yml`
   - `Dockerfile`
