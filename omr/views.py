@@ -5,12 +5,15 @@ from .models import UploadedFile
 from django.conf import settings
 from .processing.pdf_utils import pdf_to_images
 from .processing.evaluator import process_sheet, load_answers
+from django.views.decorators.csrf import csrf_protect
 from .constants import *
 import os
 from django.http import StreamingHttpResponse, JsonResponse, HttpResponse
 import json
 from django.core.cache import cache
 import uuid
+from PIL import Image, ImageDraw, ImageFont
+from django.utils.timezone import now
 
 
 
@@ -128,3 +131,71 @@ def results_view(request, task_id):
         "examName": exam_name
     })
 
+
+
+@csrf_protect
+def convert_to_pdf(request):
+    if request.method != "POST":
+        return StreamingHttpResponse(json.dumps({"error": "Invalid request"}) + "\n",
+                                     content_type="application/json")
+
+    try:
+        body = json.loads(request.body.decode("utf-8"))
+        exam_name = body.get("examName", f"exam_{now().strftime('%Y%m%d')}") # default: current date
+        image_folder = EVALUATED_IMG_PATH.format(exam_name.lower().replace(" ", "_"))
+
+        # Get only image files from the image_folder
+        image_paths = [
+            os.path.join(image_folder, f)
+            for f in os.listdir(image_folder)
+            if f.lower().endswith((".png", ".jpg", ".jpeg"))
+        ]
+
+        if not image_paths:
+            return StreamingHttpResponse(json.dumps({"error": "No images found"}) + "\n",
+                                         content_type="application/json")
+
+        def event_stream():
+            total = len(image_paths)
+            pil_images = []
+
+            for i, path in enumerate(image_paths):
+                img = Image.open(path).convert("RGB")
+                pil_images.append(img)
+
+                progress = int(((i + 1) / total) * 90)
+                yield json.dumps({"progress": progress}) + "\n"
+
+            os.makedirs(image_folder, exist_ok=True)
+            pdf_path = os.path.join(image_folder, f"{exam_name.lower().replace(" ", "_")}.pdf")
+
+            # Create cover page with Exam name
+            width, height = 2480, 3508
+            cover = Image.new("RGB", (width, height), color="white")
+            draw = ImageDraw.Draw(cover)
+            try:
+                font = ImageFont.truetype("arial.ttf", 120)
+            except:
+                font = ImageFont.load_default()
+
+            bbox = draw.textbbox((0, 0), exam_name, font=font)
+            text_width = bbox[2] - bbox[0]
+            text_height = bbox[3] - bbox[1]
+
+            x = (width - text_width) / 2
+            y = (height - text_height) / 2
+            draw.text((x, y), exam_name, fill="black", font=font)
+
+            # Save PDF: exam_name.pdf
+            cover.save(pdf_path, save_all=True, append_images=pil_images)
+            print('saved to ', pdf_path)
+
+            yield json.dumps({"progress": 100}) + "\n"
+            pdf_url = os.path.join(settings.MEDIA_URL, "exams", exam_name, f"{exam_name}.pdf")
+            yield json.dumps({"pdf_url": pdf_url}) + "\n"
+
+        return StreamingHttpResponse(event_stream(), content_type="application/json")
+
+    except Exception as e:
+        return StreamingHttpResponse(json.dumps({"error": str(e)}) + "\n",
+                                     content_type="application/json")

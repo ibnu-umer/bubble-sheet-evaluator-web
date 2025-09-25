@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 import os
 from pdf2image import convert_from_path
+from PIL import Image
 from .qr_utils import extract_qr_data
 
 
@@ -30,4 +31,10 @@ def pdf_to_images(pdf_path, dpi=None, poppler_path=None, save_path=None):
         img.save(f'{save_path}{student_data.get('roll')}.png', 'PNG')
     return students_data
 
+
+
+
+def convert_images_to_pdf(image_paths, output_path):
+    images = [Image.open(img).convert("RGB") for img in image_paths]
+    images[0].save(output_path, save_all=True, append_images=images[1:]) # Save the first image and append the rest
 
