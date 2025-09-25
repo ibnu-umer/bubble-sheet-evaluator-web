@@ -3,9 +3,7 @@ import cv2
 import json
 import csv
 import numpy as np
-from omr.constants import (
-    RESULT_IMG_PATH, MEAN_INTENSITY_THRESHOLD, OPTIONS, RESULT_SHEET_PATH, CONVERTED_IMG_PATH
-)
+from .pdf_utils import ensure_dir
 
 
 
@@ -33,7 +31,7 @@ def load_answers(path):
 
 
 
-def detect_corner_markers(image_path):
+def detect_corner_markers(image):
     def angle(pt1, pt2, pt3):
         '''To find angle of the L corners'''
         v1, v2 = pt1 - pt2, pt3 - pt2
@@ -41,7 +39,6 @@ def detect_corner_markers(image_path):
             np.clip(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)), -1.0, 1.0)
         ))
 
-    image = cv2.imread(image_path)
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     edges = cv2.Canny(gray, 50, 150)
     contours, _ = cv2.findContours(edges.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -82,13 +79,32 @@ def detect_corner_markers(image_path):
         src_pts = np.array([top[0], top[1], bottom[1], bottom[0]], dtype="float32")
         dst_pts = np.array([[0, 0], [2480, 0], [2480, 3508], [0, 3508]], dtype="float32")
         M = cv2.getPerspectiveTransform(src_pts, dst_pts)
-        return cv2.warpPerspective(image, M, (2480, 3508))
+        return cv2.warpPerspective(image, M, (2480, 3508)), src_pts
 
     print(f"Only {len(corners)} corner(s) detected. Cannot perform crop.")
-    return None
+    return None, None
 
 
-def detect_bubbles(image, img_name=None):
+
+def warp_back(original_img, processed_img, corners):
+    dst_pts = np.array([[0, 0], [2480, 0], [2480, 3508], [0, 3508]], dtype="float32")
+    src_pts = np.array(corners, dtype="float32")
+
+    # Compute inverse transform (rect → original quadrilateral)
+    M = cv2.getPerspectiveTransform(dst_pts, src_pts)
+    warped_back = cv2.warpPerspective(processed_img, M, (original_img.shape[1], original_img.shape[0]))
+    mask = np.zeros_like(original_img, dtype=np.uint8)
+    cv2.fillConvexPoly(mask, np.int32(src_pts), (255, 255, 255))
+
+    # Combine original + new patch
+    masked_original = cv2.bitwise_and(original_img, cv2.bitwise_not(mask))
+    result = cv2.add(masked_original, warped_back)
+
+    return result
+
+
+
+def detect_bubbles(image):
     img_mid = image.shape[1] // 2
     halves = [image[:, :img_mid], image[:, img_mid:]]
     all_circles = []
@@ -97,20 +113,16 @@ def detect_bubbles(image, img_name=None):
         gray = cv2.cvtColor(half, cv2.COLOR_BGR2GRAY)
         blur = cv2.GaussianBlur(gray, (5, 5), 0)
         circles = cv2.HoughCircles(blur, cv2.HOUGH_GRADIENT, dp=1, minDist=30,
-                                   param1=50, param2=20, minRadius=35, maxRadius=40)
+                                   param1=50, param2=20, minRadius=35, maxRadius=40
+                                )
         all_circles.append(np.round(circles[0, :]).astype("int") if circles is not None else [])
 
-    cv2.imwrite(f'{RESULT_IMG_PATH}blobs_detected_{img_name}.png', cv2.hconcat(halves))
-    return all_circles
+    return all_circles, cv2.hconcat(halves)
 
 
-def group_and_evaluate(circles, img_name=None):
-    img_path = f'{RESULT_IMG_PATH}blobs_detected_{img_name}.png'
-    image = cv2.imread(img_path)
+def group_and_evaluate(circles, image, mean_intensity_threshold, options):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    result = {}
-    qn = 1
-    offset = 0
+    result, qn, offset = {}, 1, 0
 
     for group in circles:
         rows = []
@@ -130,32 +142,30 @@ def group_and_evaluate(circles, img_name=None):
                 mask = np.zeros_like(gray)
                 cv2.circle(mask, (x + offset, y), r, 255, -1)
                 mean_val = cv2.mean(gray, mask=mask)[0]
-                color = (0, 255, 0) if mean_val < MEAN_INTENSITY_THRESHOLD else (0, 0, 255)
-                if mean_val < MEAN_INTENSITY_THRESHOLD:
-                    result[qn] = OPTIONS[j]
+                color = (0, 255, 0) if mean_val < mean_intensity_threshold else (0, 0, 255)
+                if mean_val < mean_intensity_threshold:
+                    result[qn] = options[j]
                 cv2.circle(image, (x + offset, y), r, color, 4)
-                cv2.putText(image, f'{OPTIONS[j]} {round(mean_val, 2)}', ((x - 100) + offset, y - 55),
+                cv2.putText(image, f'{options[j]} {round(mean_val, 2)}', ((x - 100) + offset, y - 55),
                             cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 3)
             qn += 1
         offset = image.shape[1] // 2
 
-    if img_name is not None:
-        cv2.imwrite(f'{RESULT_IMG_PATH}marked_{img_name}.png', image)
-        os.remove(f'{RESULT_IMG_PATH}blobs_detected_{img_name}.png')
-    return result
+    return result, image
 
 
 def evaluate_sheet(responses, student_data, answer_keys):
-    # answers = load_answers()  # Loading in each coz multithreading didn't share variables
     score = sum(1 for q, a in responses.items() if answer_keys.get(str(q)) == a)
     student_data['score'] = score
-
-    print(f"Student: {student_data.get('name')} {student_data.get('roll')}\nScore: {score}/40\n")
+    # print(f"Student: {student_data.get('name')} {student_data.get('roll')}\nScore: {score}/40\n")
     return student_data
 
 
 
-def process_sheet(img_filename, student_data, answer_keys):
+def process_sheet(
+        img_filename, student_data, answer_keys, converted_folder,
+        evaluated_folder, thresh=None, options=None
+    ):
     """
     Process a single OMR sheet image:
     - Detects corner markers
@@ -172,19 +182,27 @@ def process_sheet(img_filename, student_data, answer_keys):
         dict | str: Processed student info or error message.
     """
     try:
-        img_path = os.path.join(CONVERTED_IMG_PATH, img_filename)
+        img_path = os.path.join(converted_folder, img_filename)
+        image = cv2.imread(img_path)
 
         # detect corners and crop sheet
-        cropped = detect_corner_markers(img_path)
+        cropped, corners = detect_corner_markers(image)
         if cropped is None:
             return {"error": f"Failed to process {img_filename}"}
 
         img_name = os.path.splitext(img_filename)[0]
-        bubbles = detect_bubbles(cropped, img_name=img_name)
+        bubbles, detected_image = detect_bubbles(cropped)
 
         # evaluate sheet
-        results = group_and_evaluate(bubbles, img_name=img_name)
+        results, marked_image = group_and_evaluate(
+            bubbles, detected_image, thresh, options
+        )
         student_info = evaluate_sheet(results, student_data, answer_keys)
+
+        # save the cropped sheet back to the whole sheet
+        result_img = warp_back(image, marked_image, corners)
+        ensure_dir(evaluated_folder)
+        cv2.imwrite(os.path.join(evaluated_folder, img_filename), result_img)
 
         # Cleanup: remove temporary image to save space
         try:
@@ -193,12 +211,13 @@ def process_sheet(img_filename, student_data, answer_keys):
             pass
 
         return student_info
-    except:
+    except Exception as error:
+        print(f"error while processing: {error}")
         return img_filename
 
 
 
-def save_results_to_csv(results):
+def save_results_to_csv(results, result_path):
     if not results:
         print("No results to save.")
         return
@@ -206,8 +225,8 @@ def save_results_to_csv(results):
     sorted_results = sorted(results, key=lambda x:x['score'], reverse=True)
 
     keys = ['roll', 'name', 'score']
-    with open(RESULT_SHEET_PATH, 'w', newline='') as f:
+    with open(result_path, 'w', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=keys)
         writer.writeheader()
         writer.writerows(sorted_results)
-    return RESULT_SHEET_PATH
+    return result_path
