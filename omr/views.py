@@ -84,6 +84,7 @@ def process_ajax(request):
                 progress = int((i / total) * 100)
                 yield json.dumps({"progress": progress}) + "\n"
 
+            os.removedirs(converted_img_path)
             # Save results temporarily (10 min)
             cache.set(
                 task_id,
