@@ -38,7 +38,7 @@ def process_ajax(request):
     if request.method == "POST":
         sheet_files = request.POST.getlist("sheet_files")
         answer_file = request.POST.get("answer_file")
-        exam_name = request.POST.get("examName")
+        exam_name = request.POST.get("examName").lower().replace(" ", "_")
 
         converted_img_path = CONVERTED_IMG_PATH.format(exam_name)
         evaluated_img_path = EVALUATED_IMG_PATH.format(exam_name)
@@ -91,7 +91,7 @@ def process_ajax(request):
             # Save results temporarily (10 min)
             cache.set(
                 task_id,
-                {"results": final_results, "errors": errored_files, "examName": exam_name},
+                {"results": final_results, "errors": errored_files, "examName": request.POST.get("examName")},
                 timeout=600
             )
 
@@ -142,7 +142,8 @@ def convert_to_pdf(request):
     try:
         body = json.loads(request.body.decode("utf-8"))
         exam_name = body.get("examName", f"exam_{now().strftime('%Y%m%d')}") # default: current date
-        image_folder = EVALUATED_IMG_PATH.format(exam_name.lower().replace(" ", "_"))
+        file_name = exam_name.lower().replace(" ", "_")
+        image_folder = EVALUATED_IMG_PATH.format(file_name)
 
         # Get only image files from the image_folder
         image_paths = [
@@ -167,7 +168,7 @@ def convert_to_pdf(request):
                 yield json.dumps({"progress": progress}) + "\n"
 
             os.makedirs(image_folder, exist_ok=True)
-            pdf_path = os.path.join(image_folder, f"{exam_name.lower().replace(" ", "_")}.pdf")
+            pdf_path = os.path.join(image_folder, f"{file_name}.pdf")
 
             # Create cover page with Exam name
             width, height = 2480, 3508

@@ -23,7 +23,7 @@
     <body>
         <h2>Evaluation Results</h2>
         <h2>{{ examName }}</h2>
-        <table border="1">
+        <table border="1" id="result-table">
             <thead>
                 <tr>
                     <th>Roll</th>
@@ -42,18 +42,23 @@
             </tbody>
         </table>
 
+        <button id="convert-result-csv">Convert Result into CSV</button>
+        <button id="convert-result-xlsx">Convert Result into Excel</button>
+
         <button id="convert-pdf-btn">Convert Images to PDF</button>
         <div id="progress-container">
-        <div id="progress-bar">0%</div>
+            <div id="progress-bar">0%</div>
         </div>
 
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
         <script>
+            const examName = "{{ examName|escapejs }}"
+            const examNameLower = examName.toLowerCase().replace(/\s+/g, "_");
+
             document.getElementById("convert-pdf-btn").addEventListener(
                 "click",
                 async function(event) {
                     event.preventDefault();
-
-                    const examName = "{{ examName|escapejs }}"
 
                     const progressContainer = document.getElementById("progress-container");
                     const progressBar = document.getElementById("progress-bar");
@@ -139,6 +144,46 @@
                     }
                 }
             );
+
+
+            // Function to export table to CSV
+            function exportTableToCSV(filename) {
+                let csv = [];
+                let rows = document.querySelectorAll("#result-table tr");
+
+                for (let row of rows) {
+                    let cols = row.querySelectorAll("td, th");
+                    let rowData = [];
+                    for (let col of cols) {
+                        rowData.push(col.innerText);
+                    }
+                    csv.push(rowData.join(","));
+                }
+
+                let csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
+                let downloadLink = document.createElement("a");
+                downloadLink.download = filename;
+                downloadLink.href = URL.createObjectURL(csvFile);
+                downloadLink.click();
+            }
+
+
+            // Function to export table to Excel
+            function exportTableToExcel(filename) {
+                let table = document.getElementById("result-table");
+                let wb = XLSX.utils.table_to_book(table, { sheet: "Results" });
+                XLSX.writeFile(wb, filename);
+            }
+
+
+            // Event Listeners
+            document.getElementById("convert-result-csv").addEventListener("click", function () {
+                exportTableToCSV(examNameLower + ".csv");
+            });
+
+            document.getElementById("convert-result-xlsx").addEventListener("click", function () {
+                exportTableToExcel(examNameLower + ".xlsx");
+            });
         </script>
     </body>
 </html>
