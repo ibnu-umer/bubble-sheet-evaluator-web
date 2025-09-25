@@ -2,9 +2,10 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from .forms import UploadedFileForm
 from .models import UploadedFile
+from django.conf import settings
 from .processing.pdf_utils import pdf_to_images
 from .processing.evaluator import process_sheet, load_answers
-from .constants import CONVERTED_IMG_PATH, PASS_MARK
+from .constants import *
 import os
 from django.http import StreamingHttpResponse, JsonResponse, HttpResponse
 import json
@@ -36,6 +37,9 @@ def process_ajax(request):
         answer_file = request.POST.get("answer_file")
         exam_name = request.POST.get("examName")
 
+        converted_img_path = CONVERTED_IMG_PATH.format(exam_name)
+        evaluated_img_path = EVALUATED_IMG_PATH.format(exam_name)
+
         def stream():
             final_results = []
             task_id = str(uuid.uuid4())
@@ -46,8 +50,13 @@ def process_ajax(request):
             all_sheet_files = []
 
             for sheet_file in sheet_files:
-                students_data = pdf_to_images(sheet_file)
-                sheet_files_local = os.listdir(CONVERTED_IMG_PATH)
+                students_data = pdf_to_images(
+                    sheet_file,
+                    save_path=converted_img_path,
+                    dpi=PDF_DPI,
+                    poppler_path=POPPLER_PATH
+                )
+                sheet_files_local = os.listdir(converted_img_path)
 
                 # Match each image/student with its file
                 all_students_data.extend(students_data)
@@ -58,7 +67,14 @@ def process_ajax(request):
 
             # Process each sheet
             for i, (student_data, sheet_file) in enumerate(zip(all_students_data, all_sheet_files), 1):
-                result = process_sheet(sheet_file, student_data, answer_keys=answer_keys)
+                result = process_sheet(
+                    sheet_file, student_data,
+                    answer_keys=answer_keys,
+                    converted_folder=converted_img_path,
+                    evaluated_folder=evaluated_img_path,
+                    thresh=MEAN_INTENSITY_THRESHOLD,
+                    options=OPTIONS
+                )
                 if type(result) == str:
                     errored_files.append(result)
                 else:
