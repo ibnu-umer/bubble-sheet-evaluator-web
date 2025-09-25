@@ -40,9 +40,6 @@
         </ul>
         {% endif %}
 
-        <h2>Enter Exam Name</h2>
-        <input id="exam-name" type="text">
-
         <!-- Section 1: Upload Sheet PDFs -->
         <h2>1. Upload Sheet PDFs</h2>
         <form method="post" enctype="multipart/form-data" action="{% url 'upload_file' %}">
@@ -71,6 +68,10 @@
         <h2>3. Select Files to Process</h2>
         <form method="post" id="process-form">
             {% csrf_token %}
+
+            <h2>Enter Exam Name</h2>
+            <input id="exam-name" name="exam_name" type="text" required>
+
             <div>
                 <label for="sheet_select">Select Sheet PDFs:</label>
                 <select name="sheet_files" id="sheet_select" multiple required>
@@ -91,7 +92,7 @@
                     {% endfor %}
                 </select>
             </div>
-            <button type="button" onclick="startProcessing(event)">Start Processing</button>
+            <button type="submit">Start Processing</button>
         </form>
 
         <h1>Processing Sheets</h1>
@@ -102,7 +103,8 @@
         <div id="results" style="display:none;"></div>
 
         <script>
-            async function startProcessing(event) {
+            document.getElementById("process-form").addEventListener(
+                "submit", async function(event) {
                 event.preventDefault(); // stop the form's normal submit
 
                 const exam_name = document.getElementById("exam-name").value;
@@ -182,7 +184,7 @@
                         console.error("Failed to parse leftover:", buffer, e);
                     }
                 }
-            }
+            })
 
         </script>
     </body>
