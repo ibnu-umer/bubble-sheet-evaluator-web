@@ -36,7 +36,7 @@ def evaluator(request):
 
 def process_ajax(request):
     if request.method == "POST":
-        template = request.POST.get("template")
+        template = request.POST.get("sheet_template")
         sheet_files = request.POST.getlist("sheet_files")
         answer_file = request.POST.get("answer_file")
         exam_name = request.POST.get("exam_name").lower().replace(" ", "_")
@@ -50,6 +50,7 @@ def process_ajax(request):
         def stream():
             final_results = []
             answer_keys = load_answers(answer_file)
+            template_config = TEMPLATE_CONFIG.get(template)
 
             # Collect all students_data from all PDFs
             all_students_data = []
@@ -79,7 +80,7 @@ def process_ajax(request):
                     converted_folder=converted_img_path,
                     evaluated_folder=evaluated_img_path,
                     thresh=MEAN_INTENSITY_THRESHOLD,
-                    options=OPTIONS
+                    options=OPTIONS[:template_config.get("options")],
                 )
                 if type(result) == str:
                     errored_files.append(result)
