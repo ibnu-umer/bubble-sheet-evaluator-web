@@ -159,14 +159,14 @@
 
 
             <h3>Exam Date</h3>
-            <input type="date" id="dateInput">
+            <input for="exam-date" name="exam_date" type="date" id="dateInput">
 
 
             <h3>Exam Name</h3>
-            <input id="exam-name" name="exam_name" type="text" required>
+            <input for="exam-name" name="exam_name" type="text" required>
 
             <h3>College/School Name</h3>
-            <input id="college-name" name="college_name" type="text" required>
+            <input for="org-name" name="org_name" type="text" required>
 
             <div>
                 <label for="sheet_select">Select Sheet PDFs:</label>
@@ -203,10 +203,10 @@
                 "submit", async function(event) {
                 event.preventDefault(); // stop the form's normal submit
 
-                const exam_name = document.getElementById("exam-name").value;
+                // const exam_name = document.getElementById("exam-name").value;
                 const form = document.getElementById("process-form");
                 const formData = new FormData(form);
-                formData.append("examName", exam_name)
+                // formData.append("examName", exam_name)
 
                 const response = await fetch("{% url 'process_ajax' %}", {
                     method: "POST",
@@ -232,7 +232,7 @@
                     }
 
                     // results button
-                    if (data.results_id) {
+                    if (data.exam_id) {
                         const resultsDiv = document.getElementById("results");
                         if (!resultsDiv) {
                             console.error("No #results div found!");
@@ -242,7 +242,7 @@
                         resultsDiv.style.display = "block";
                         resultsDiv.innerHTML = `
                             <p>Processing completed successfully!</p>
-                            <a href="/results/${data.results_id}/" class="btn btn-primary">
+                            <a href="/results/${data.exam_id}/" class="btn btn-primary">
                                 View Results
                             </a>
                         `;

@@ -36,16 +36,19 @@ def evaluator(request):
 
 def process_ajax(request):
     if request.method == "POST":
+        template = request.POST.get("template")
         sheet_files = request.POST.getlist("sheet_files")
         answer_file = request.POST.get("answer_file")
-        exam_name = request.POST.get("examName").lower().replace(" ", "_")
+        exam_name = request.POST.get("exam_name").lower().replace(" ", "_")
+        org_name = request.POST.get("org_name")
+        exam_date = request.POST.get("exam_date")
+        exam_id = str(uuid.uuid4())
 
         converted_img_path = CONVERTED_IMG_PATH.format(exam_name)
         evaluated_img_path = EVALUATED_IMG_PATH.format(exam_name)
 
         def stream():
             final_results = []
-            task_id = str(uuid.uuid4())
             answer_keys = load_answers(answer_file)
 
             # Collect all students_data from all PDFs
@@ -90,13 +93,19 @@ def process_ajax(request):
             os.removedirs(converted_img_path)
             # Save results temporarily (10 min)
             cache.set(
-                task_id,
-                {"results": final_results, "errors": errored_files, "examName": request.POST.get("examName")},
+                exam_id,
+                {
+                    "results": final_results,
+                    "errors": errored_files,
+                    "examName": request.POST.get("exam_name"),
+                    "orgName": org_name,
+                    "examDate": exam_date
+                },
                 timeout=600
             )
 
             # Send results_id at the end
-            yield json.dumps({"results_id": task_id}) + "\n"
+            yield json.dumps({"exam_id": exam_id}) + "\n"
 
         return StreamingHttpResponse(stream(), content_type="application/json")
 
@@ -107,9 +116,9 @@ def process_ajax(request):
 
 
 
-def results_view(request, task_id):
-    cached_data = cache.get(str(task_id))
-    exam_name = cached_data.get("examName", "Examination").upper
+def results_view(request, exam_id):
+    cached_data = cache.get(str(exam_id))
+    exam_name = cached_data.get("examName", "Examination").upper()
 
     if cached_data:
         final_results = cached_data.get("results", [])
@@ -128,7 +137,9 @@ def results_view(request, task_id):
     return render(request, "results.html", {
         "results": final_results,
         "error": errored_files,
-        "examName": exam_name
+        "examName": exam_name,
+        "orgName": cached_data.get("orgName"),
+        "examDate": cached_data.get("examDate")
     })
 
 
