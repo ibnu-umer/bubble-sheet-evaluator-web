@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
     <head>
@@ -27,6 +28,64 @@
                 border-collapse: collapse;
                 padding: 5px;
             }
+            .template-options {
+                display: flex;
+                gap: 20px;
+                flex-wrap: wrap;
+            }
+            .template-card {
+                border: 2px solid #ccc;
+                border-radius: 10px;
+                padding: 15px;
+                width: 200px;
+                text-align: center;
+            }
+            .template-card input[type="radio"] {
+                margin-bottom: 8px;
+            }
+            .template-card label {
+                display: block;
+                margin-bottom: 10px;
+                font-weight: bold;
+            }
+            .preview-btn {
+                background-color: #007bff;
+                color: white;
+                border: none;
+                padding: 8px 12px;
+                border-radius: 6px;
+                cursor: pointer;
+            }
+            .preview-btn:hover {
+                background-color: #0056b3;
+            }
+
+            /* Overlay modal */
+            .preview-overlay {
+                display: none; /* hidden by default */
+                position: fixed;
+                top: 0; left: 0;
+                width: 100%; height: 100%;
+                background: rgba(0,0,0,0.8);
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+            }
+            .preview-overlay img {
+                max-width: 90%;
+                max-height: 90%;
+                border-radius: 10px;
+                box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            }
+            .close-btn {
+                position: absolute;
+                top: 20px;
+                right: 30px;
+                font-size: 30px;
+                font-weight: bold;
+                color: white;
+                cursor: pointer;
+            }
         </style>
     </head>
     <body>
@@ -52,7 +111,7 @@
             <button type="submit">Upload Sheet</button>
         </form>
 
-        <!-- Section 2: Upload Answer Key -->  
+        <!-- Section 2: Upload Answer Key -->
         <h2>2. Upload Answer Key</h2>
         <form method="post" enctype="multipart/form-data" action="{% url 'evaluator' %}">
             {% csrf_token %}
@@ -69,8 +128,45 @@
         <form method="post" id="process-form">
             {% csrf_token %}
 
-            <h2>Enter Exam Name</h2>
+            <h2>Select a Sheet Template</h2>
+            <div class="template-options">
+                <div class="template-card">
+                    <input type="radio" id="template1" name="sheet_template" value="template1">
+                    <label for="template1">Template 1</label>
+                    <button class="preview-btn" data-img="{% static 'sheet_images/AS-01.png' %}">Preview</button>
+                </div>
+                <div class="template-card">
+                    <input type="radio" id="template2" name="sheet_template" value="template2">
+                    <label for="template2">Template 2</label>
+                    <button class="preview-btn" data-img="{% static 'sheet_images/AS-02.png' %}">Preview</button>
+                </div>
+                <div class="template-card">
+                    <input type="radio" id="template3" name="sheet_template" value="template3">
+                    <label for="template3">Template 3</label>
+                    <button class="preview-btn" data-img="{% static 'sheet_images/AS-03.png' %}">Preview</button>
+                </div>
+                <div class="template-card">
+                    <input type="radio" id="template4" name="sheet_template" value="template4">
+                    <label for="template4">Template 4</label>
+                    <button class="preview-btn" data-img="{% static 'sheet_images/AS-04.png' %}">Preview</button>
+                </div>
+            </div>
+
+            <div class="preview-overlay" id="previewOverlay">
+                <span class="close-btn" id="closePreview">&times;</span>
+                <img id="previewImage" src="" alt="Template Preview">
+            </div>
+
+
+            <h3>Exam Date</h3>
+            <input type="date" id="dateInput">
+
+
+            <h3>Exam Name</h3>
             <input id="exam-name" name="exam_name" type="text" required>
+
+            <h3>College/School Name</h3>
+            <input id="college-name" name="college_name" type="text" required>
 
             <div>
                 <label for="sheet_select">Select Sheet PDFs:</label>
@@ -185,6 +281,35 @@
                     }
                 }
             })
+
+            const previewButtons = document.querySelectorAll(".preview-btn");
+            const overlay = document.getElementById("previewOverlay");
+            const previewImage = document.getElementById("previewImage");
+            const closeBtn = document.getElementById("closePreview");
+
+            previewButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                const imgSrc = btn.getAttribute("data-img");
+                previewImage.src = imgSrc;
+                overlay.style.display = "flex";
+            });
+            });
+
+            closeBtn.addEventListener("click", () => {
+                overlay.style.display = "none";
+                previewImage.src = "";
+            });
+
+            overlay.addEventListener("click", (e) => {
+            if (e.target === overlay) {
+                overlay.style.display = "none";
+                previewImage.src = "";
+            }
+            });
+
+            // Get today's date in YYYY-MM-DD format
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById("dateInput").value = today;
 
         </script>
     </body>
