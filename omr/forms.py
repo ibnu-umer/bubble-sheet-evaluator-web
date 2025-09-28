@@ -1,7 +1,8 @@
 from django import forms
+from .models import Exam
 
 
-class UploadForm(forms.Form):
+class UploadForm(forms.ModelForm):
     answer_sheets = forms.FileField(
         required=False,
         help_text="Upload answer sheets (PDF only)",
@@ -10,6 +11,10 @@ class UploadForm(forms.Form):
         required=False,
         help_text="Upload answer key (CSV or JSON)",
     )
+
+    class Meta:
+        model = Exam
+        fields = ['exam_name', 'org_name', 'exam_date', 'sheet_template', 'subject', 'pass_mark']
 
     def clean_answer_sheets(self):
         file = self.cleaned_data.get("answer_sheets")

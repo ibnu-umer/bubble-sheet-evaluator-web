@@ -14,6 +14,7 @@ from django.core.cache import cache
 import uuid
 from PIL import Image, ImageDraw, ImageFont
 from django.utils.timezone import now
+from .models import Exam
 
 
 
@@ -51,8 +52,20 @@ def process_ajax(request):
         answer_file = request.FILES.get("answer_file")
         exam_name = request.POST.get("exam_name").lower().replace(" ", "_")
         org_name = request.POST.get("org_name")
+        subject = request.POST.get("subject")
+        pass_mark = request.POST.get("pass_mark")
         exam_date = request.POST.get("exam_date")
         exam_id = str(uuid.uuid4())
+
+        exam = Exam.objects.create(
+            exam_name=exam_name,
+            org_name=org_name,
+            exam_date=exam_date,
+            sheet_template=template,
+            exam_id=exam_id,
+            subject=subject,
+            pass_mark=pass_mark,
+        )
 
         converted_img_path = CONVERTED_IMG_PATH.format(exam_name)
         evaluated_img_path = EVALUATED_IMG_PATH.format(exam_name)

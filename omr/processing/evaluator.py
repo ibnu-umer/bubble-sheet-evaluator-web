@@ -22,7 +22,6 @@ def load_answers(file):
     elif file.name.endswith(".csv"):
         reader = csv.reader(StringIO(content))
         data = {row[0]: row[1] for row in reader}
-        print(data)
         return data
 
     else:
