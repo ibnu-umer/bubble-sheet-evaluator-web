@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from .forms import UploadedFileForm
-from .models import UploadedFile
+from .forms import UploadForm
+from .models import UploadLog
 from django.conf import settings
 from .processing.pdf_utils import pdf_to_images
 from .processing.evaluator import process_sheet, load_answers
@@ -17,19 +17,29 @@ from django.utils.timezone import now
 
 
 
+
 def evaluator(request):
     if request.method == 'POST':
-        form = UploadedFileForm(request.POST, request.FILES)
+        form = UploadForm(request.POST, request.FILES)
         if form.is_valid():
-            instance = form.save()
-            messages.success(request, f"Uploaded: {instance.file.name}")
-            return redirect('evaluator')
+            sheet_file = form.cleaned_data.get("answer_sheets")
+            key_file = form.cleaned_data.get("answer_key")
+
+            if sheet_file:
+                UploadLog.objects.create(filename=sheet_file.name, filetype="sheet")
+                messages.success(request, f"Processed answer sheet: {sheet_file.name}")
+
+            if key_file:
+                UploadLog.objects.create(filename=key_file.name, filetype="key")
+                messages.success(request, f"Processed answer key: {key_file.name}")
+
+            return redirect("evaluator")
         else:
             messages.error(request, "Upload failed. Fix the errors below.")
     else:
-        form = UploadedFileForm()
+        form = UploadForm()
 
-    recent = UploadedFile.objects.order_by('-uploaded_at')[:20]
+    recent = UploadLog.objects.order_by('-uploaded_at')[:20]
     return render(request, 'evaluate.html', {'form': form, 'recent': recent})
 
 
@@ -37,8 +47,8 @@ def evaluator(request):
 def process_ajax(request):
     if request.method == "POST":
         template = request.POST.get("sheet_template")
-        sheet_files = request.POST.getlist("sheet_files")
-        answer_file = request.POST.get("answer_file")
+        sheet_files = request.FILES.getlist("sheet_files")
+        answer_file = request.FILES.get("answer_file")
         exam_name = request.POST.get("exam_name").lower().replace(" ", "_")
         org_name = request.POST.get("org_name")
         exam_date = request.POST.get("exam_date")

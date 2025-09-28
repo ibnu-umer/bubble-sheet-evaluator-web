@@ -99,33 +99,7 @@
         </ul>
         {% endif %}
 
-        <!-- Section 1: Upload Sheet PDFs -->
-        <h2>1. Upload Sheet PDFs</h2>
-        <form method="post" enctype="multipart/form-data" action="{% url 'evaluator' %}">
-            {% csrf_token %}
-            <input type="hidden" name="file_type" value="sheet">
-            <div>
-                <label for="id_sheet_file">Choose Sheet PDF:</label>
-                <input type="file" name="file" id="id_sheet_file" required>
-            </div>
-            <button type="submit">Upload Sheet</button>
-        </form>
-
-        <!-- Section 2: Upload Answer Key -->
-        <h2>2. Upload Answer Key</h2>
-        <form method="post" enctype="multipart/form-data" action="{% url 'evaluator' %}">
-            {% csrf_token %}
-            <input type="hidden" name="file_type" value="answer_key">
-            <div>
-                <label for="id_answer_file">Choose Answer Key File:</label>
-                <input type="file" name="file" id="id_answer_file" required>
-            </div>
-            <button type="submit">Upload Answer Key</button>
-        </form>
-
-        <!-- Section 3: Select Uploaded Files -->
-        <h2>3. Select Files to Process</h2>
-        <form method="post" id="process-form">
+        <form method="post" enctype="multipart/form-data" id="process-form" action="{% url 'evaluator' %}">
             {% csrf_token %}
 
             <h2>Select a Sheet Template</h2>
@@ -133,22 +107,22 @@
                 <div class="template-card">
                     <input type="radio" id="AS-01" name="sheet_template" value="AS-01" required>
                     <label for="AS-01">AS-01</label>
-                    <button class="preview-btn" data-img="{% static 'sheet_images/AS-01.png' %}">Preview</button>
+                    <button class="preview-btn" type="button" data-img="{% static 'sheet_images/AS-01.png' %}">Preview</button>
                 </div>
                 <div class="template-card">
                     <input type="radio" id="AS-02" name="sheet_template" value="AS-02">
                     <label for="AS-02">AS-02</label>
-                    <button class="preview-btn" data-img="{% static 'sheet_images/AS-02.png' %}">Preview</button>
+                    <button class="preview-btn" type="button" data-img="{% static 'sheet_images/AS-02.png' %}">Preview</button>
                 </div>
                 <div class="template-card">
                     <input type="radio" id="AS-03" name="sheet_template" value="AS-03">
                     <label for="AS-03">AS-03</label>
-                    <button class="preview-btn" data-img="{% static 'sheet_images/AS-03.png' %}">Preview</button>
+                    <button class="preview-btn" type="button" data-img="{% static 'sheet_images/AS-03.png' %}">Preview</button>
                 </div>
                 <div class="template-card">
                     <input type="radio" id="AS-04" name="sheet_template" value="AS-04">
                     <label for="AS-04">AS-04</label>
-                    <button class="preview-btn" data-img="{% static 'sheet_images/AS-04.png' %}">Preview</button>
+                    <button class="preview-btn" type="button" data-img="{% static 'sheet_images/AS-04.png' %}">Preview</button>
                 </div>
             </div>
 
@@ -157,10 +131,8 @@
                 <img id="previewImage" src="" alt="Template Preview">
             </div>
 
-
             <h3>Exam Date</h3>
             <input for="exam-date" name="exam_date" type="date" id="dateInput">
-
 
             <h3>Exam Name</h3>
             <input for="exam-name" name="exam_name" type="text" required>
@@ -168,26 +140,20 @@
             <h3>College/School Name</h3>
             <input for="org-name" name="org_name" type="text" required>
 
+            <!-- Upload Section -->
+            <h3>Upload Files</h3>
             <div>
-                <label for="sheet_select">Select Sheet PDFs:</label>
-                <select name="sheet_files" id="sheet_select" multiple required>
-                    {% for f in recent %}
-                        {% if f.file_type == "sheet" %}
-                            <option value="{{ f.file.path }}">{{ f.file.name }}</option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
+                <label for="sheet_upload">Upload Sheet PDFs:</label>
+                <input type="file" name="sheet_files" id="sheet_upload" accept=".pdf" multiple required>
+                <ul id="sheetList"></ul>
             </div>
+
             <div>
-                <label for="answer_select">Select Answer Key:</label>
-                <select name="answer_file" id="answer_select" required>
-                    {% for f in recent %}
-                        {% if f.file_type == "answer_key" %}
-                            <option value="{{ f.file.path }}">{{ f.file.name }}</option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
+                <label for="answer_upload">Upload Answer Key (CSV/JSON):</label>
+                <input type="file" name="answer_file" id="answer_upload" accept=".csv,.json" required>
+                <ul id="answerList"></ul>
             </div>
+
             <button type="submit">Start Processing</button>
         </form>
 
@@ -199,15 +165,94 @@
         <div id="results" style="display:none;"></div>
 
         <script>
-            document.getElementById("process-form").addEventListener(
-                "submit", async function(event) {
-                event.preventDefault(); // stop the form's normal submit
+            document.addEventListener("DOMContentLoaded", function () {
+                // For multiple sheet files
+                function handleMultiFileList(input, listId) {
+                    const list = document.getElementById(listId);
+                    list.innerHTML = "";
 
-                // const exam_name = document.getElementById("exam-name").value;
+                    Array.from(input.files).forEach((file, index) => {
+                        const li = document.createElement("li");
+                        li.textContent = file.name + " ";
+
+                        const removeBtn = document.createElement("span");
+                        removeBtn.textContent = "✖";
+                        removeBtn.style.cursor = "pointer";
+                        removeBtn.style.color = "red";
+                        removeBtn.onclick = function () {
+                            const dt = new DataTransfer();
+                            Array.from(input.files)
+                                .filter((_, i) => i !== index)
+                                .forEach(f => dt.items.add(f));
+                            input.files = dt.files;
+                            handleMultiFileList(input, listId);
+                        };
+
+                        li.appendChild(removeBtn);
+                        list.appendChild(li);
+                    });
+                }
+
+                // For single answer file
+                function handleSingleFile(input, listId) {
+                    const list = document.getElementById(listId);
+                    list.innerHTML = "";
+
+                    if (input.files.length > 0) {
+                        const file = input.files[0];
+                        const li = document.createElement("li");
+                        li.textContent = file.name + " ";
+
+                        const removeBtn = document.createElement("span");
+                        removeBtn.textContent = "✖";
+                        removeBtn.style.cursor = "pointer";
+                        removeBtn.style.color = "red";
+                        removeBtn.onclick = function () {
+                            input.value = ""; // reset file input
+                            list.innerHTML = "";
+                        };
+
+                        li.appendChild(removeBtn);
+                        list.appendChild(li);
+                    }
+                }
+
+                document.getElementById("sheet_upload").addEventListener("change", function () {
+                    handleMultiFileList(this, "sheetList");
+                });
+
+                document.getElementById("answer_upload").addEventListener("change", function () {
+                    handleSingleFile(this, "answerList");
+                });
+            });
+
+
+            document.getElementById("process-form").addEventListener("submit", async function(event) {
+                event.preventDefault(); // stop normal submit
+
                 const form = document.getElementById("process-form");
-                const formData = new FormData(form);
-                // formData.append("examName", exam_name)
+                const formData = new FormData();
 
+                // Add regular inputs (text/date/radio etc.)
+                new FormData(form).forEach((value, key) => {
+                    if (key !== "sheet_files" && key !== "answer_file") {
+                        formData.append(key, value);
+                    }
+                });
+
+                // Add multiple sheet files
+                const sheetInput = document.getElementById("sheet_upload");
+                Array.from(sheetInput.files).forEach(file => {
+                    formData.append("sheet_files", file);
+                });
+
+                // Add single answer file
+                const answerInput = document.getElementById("answer_upload");
+                if (answerInput.files.length > 0) {
+                    formData.append("answer_file", answerInput.files[0]);
+                }
+
+                // Send request
                 const response = await fetch("{% url 'process_ajax' %}", {
                     method: "POST",
                     headers: {
@@ -216,13 +261,13 @@
                     body: formData
                 });
 
+                // --- Streaming response handling ---
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
                 let buffer = "";
 
                 function handleData(data) {
-                    console.log("handleData called with:", data);
-                    // progress bar update
+                    // progress bar
                     if (data.progress !== undefined) {
                         const bar = document.getElementById("progress-bar");
                         if (bar) {
@@ -231,23 +276,19 @@
                         }
                     }
 
-                    // results button
+                    // results
                     if (data.exam_id) {
                         const resultsDiv = document.getElementById("results");
-                        if (!resultsDiv) {
-                            console.error("No #results div found!");
-                            return;
+                        if (resultsDiv) {
+                            resultsDiv.style.display = "block";
+                            resultsDiv.innerHTML = `
+                                <p>Processing completed successfully!</p>
+                                <a href="/results/${data.exam_id}/" class="btn btn-primary">
+                                    View Results
+                                </a>
+                            `;
                         }
-
-                        resultsDiv.style.display = "block";
-                        resultsDiv.innerHTML = `
-                            <p>Processing completed successfully!</p>
-                            <a href="/results/${data.exam_id}/" class="btn btn-primary">
-                                View Results
-                            </a>
-                        `;
                     }
-
                     console.log("Chunk received:", data);
                 }
 
@@ -256,7 +297,6 @@
                     if (done) break;
 
                     buffer += decoder.decode(value, { stream: true });
-
                     let parts = buffer.split("\n");
                     buffer = parts.pop();
 
@@ -271,7 +311,6 @@
                     }
                 }
 
-                // process leftover
                 if (buffer.trim()) {
                     try {
                         const data = JSON.parse(buffer);
@@ -280,19 +319,20 @@
                         console.error("Failed to parse leftover:", buffer, e);
                     }
                 }
-            })
+            });
 
+            // --- Preview handling ---
             const previewButtons = document.querySelectorAll(".preview-btn");
             const overlay = document.getElementById("previewOverlay");
             const previewImage = document.getElementById("previewImage");
             const closeBtn = document.getElementById("closePreview");
 
             previewButtons.forEach(btn => {
-            btn.addEventListener("click", () => {
-                const imgSrc = btn.getAttribute("data-img");
-                previewImage.src = imgSrc;
-                overlay.style.display = "flex";
-            });
+                btn.addEventListener("click", () => {
+                    const imgSrc = btn.getAttribute("data-img");
+                    previewImage.src = imgSrc;
+                    overlay.style.display = "flex";
+                });
             });
 
             closeBtn.addEventListener("click", () => {
@@ -301,13 +341,13 @@
             });
 
             overlay.addEventListener("click", (e) => {
-            if (e.target === overlay) {
-                overlay.style.display = "none";
-                previewImage.src = "";
-            }
+                if (e.target === overlay) {
+                    overlay.style.display = "none";
+                    previewImage.src = "";
+                }
             });
 
-            // Get today's date in YYYY-MM-DD format
+            // --- Default exam date ---
             const today = new Date().toISOString().split('T')[0];
             document.getElementById("dateInput").value = today;
 

@@ -1,53 +1,25 @@
 from django import forms
-from django.core.exceptions import ValidationError
-from .models import UploadedFile
-import os
-
-MAX_UPLOAD_MB = 20  # adjust
-VALID_EXTS = {
-    'sheet': ['.pdf', '.zip'],
-    'answer_key': ['.csv', '.xlsx']
-}
-
-class UploadedFileForm(forms.ModelForm):
-    class Meta:
-        model = UploadedFile
-        fields = ['file', 'file_type']
-
-    def clean(self):
-        cleaned = super().clean()
-
-        uploaded = cleaned.get('file')
-        file_type = cleaned.get('file_type')
-
-        # Basic presence checks
-        if not uploaded:
-            raise ValidationError({'file': "No file uploaded."})
-        if not file_type:
-            raise ValidationError({'file_type': "Please select a file type."})
-
-        # Extension check
-        ext = os.path.splitext(uploaded.name)[1].lower()
-        allowed = VALID_EXTS.get(file_type, [])
-        if ext not in allowed:
-            raise ValidationError({
-                'file': (
-                    f"Invalid extension {ext} for {file_type}. "
-                    f"Allowed types: {', '.join(allowed)}"
-                )
-            })
 
 
-        # Size check
-        if uploaded.size > MAX_UPLOAD_MB * 1024 * 1024:
-            raise ValidationError({
-                'file': f"File too large. Max {MAX_UPLOAD_MB} MB."
-            })
+class UploadForm(forms.Form):
+    answer_sheets = forms.FileField(
+        required=False,
+        help_text="Upload answer sheets (PDF only)",
+    )
+    answer_key = forms.FileField(
+        required=False,
+        help_text="Upload answer key (CSV or JSON)",
+    )
 
-        # Optionally: simple MIME/content_type hint (not foolproof)
-        # content_type = uploaded.content_type
-        # if file_type == 'OMR' and content_type not in ('application/pdf', 'application/zip'):
-        #     pass
+    def clean_answer_sheets(self):
+        file = self.cleaned_data.get("answer_sheets")
+        if file and not file.name.lower().endswith(".pdf"):
+            raise forms.ValidationError("Only PDF files are allowed for answer sheets.")
+        return file
 
-        return cleaned
+    def clean_answer_key(self):
+        file = self.cleaned_data.get("answer_key")
+        if file and not (file.name.lower().endswith(".csv") or file.name.lower().endswith(".json")):
+            raise forms.ValidationError("Only CSV or JSON files are allowed for answer keys.")
+        return file
 

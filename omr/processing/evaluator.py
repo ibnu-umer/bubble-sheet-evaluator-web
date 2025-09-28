@@ -1,33 +1,32 @@
 import os
 import cv2
-import json
-import csv
 import numpy as np
 from .pdf_utils import ensure_dir
+import csv, json
+from io import StringIO
 
 
 
-def load_answers(path):
-    if path.endswith(".json"):
-        # Load answers from JSON file
-        with open(path, "r") as file:
-            answers = json.load(file)
-        return answers
+def load_answers(file):
+    if not file:
+        return None
 
-    elif path.endswith(".csv"):
-        # Load answers from CSV file
-        answers = {}
-        with open(path, newline='', encoding="utf-8") as file:
-            reader = csv.reader(file)
-            # CSV format: question_number, answer
-            for row in reader:
-                if len(row) >= 2:
-                    question, answer = row[0].strip(), row[1].strip()
-                    answers[question] = answer
-        return answers
+    content = file.read().decode("utf-8")
+
+    if file.name.endswith(".json"):
+        try:
+            return json.loads(content)
+        except json.JSONDecodeError:
+            raise ValueError("Invalid JSON answer key file")
+
+    elif file.name.endswith(".csv"):
+        reader = csv.reader(StringIO(content))
+        data = {row[0]: row[1] for row in reader}
+        print(data)
+        return data
 
     else:
-        raise ValueError("Unsupported file format. Please use .json or .csv")
+        raise ValueError("Unsupported file format (only .csv and .json allowed)")
 
 
 
