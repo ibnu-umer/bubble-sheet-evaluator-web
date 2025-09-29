@@ -128,11 +128,7 @@ def process_ajax(request):
             cache.set(
                 exam_id,
                 {
-                    "results": final_results,
-                    "errors": errored_files,
-                    "examName": request.POST.get("exam_name"),
-                    "orgName": org_name,
-                    "examDate": exam_date
+                    "errors": errored_files
                 },
                 timeout=600
             )
@@ -150,29 +146,27 @@ def process_ajax(request):
 
 
 def results_view(request, exam_id):
-    cached_data = cache.get(str(exam_id))
-    exam_name = cached_data.get("examName", "Examination").upper()
+    # cached_data = cache.get(str(exam_id))
+    exam = Exam.objects.get(exam_id=exam_id)
+    results = Result.objects.filter(exam=exam)
 
-    if cached_data:
-        final_results = cached_data.get("results", [])
-        errored_files = cached_data.get("errors", [])
-    else:
-        final_results = []
-        errored_files = []
+    # if cached_data:
+    #     final_results = cached_data.get("results", [])
+    #     errored_files = cached_data.get("errors", [])
+    # else:
+    #     final_results = []
+    #     errored_files = []
 
-    if not final_results:
-        return HttpResponse("No results found or expired", status=404)
+    # if not final_results:
+    #     return HttpResponse("No results found or expired", status=404)
 
     # add status to the final results
-    for result in final_results:
-        result["status"] = "Pass" if result.get("score") > PASS_MARK else "Fail"
+    # for result in final_results:
+    #     result["status"] = "Pass" if result.get("score") > PASS_MARK else "Fail"
 
     return render(request, "results.html", {
-        "results": final_results,
-        "error": errored_files,
-        "examName": exam_name,
-        "orgName": cached_data.get("orgName"),
-        "examDate": cached_data.get("examDate")
+        "exam": exam,
+        "results": results
     })
 
 

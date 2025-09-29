@@ -22,9 +22,9 @@
 </head>
     <body>
         <h2>Evaluation Results</h2>
-        <h2>{{ examName }}</h2>
-        <h3>{{ orgName }}</h3>
-        <div>{{ examDate }}</div>
+        <h2>{{ exam.exam_name }}</h2>
+        <h3>{{ exam.org_name }}</h3>
+        <div>{{ exam.exam_date }}</div>
         <table border="1" id="result-table">
             <thead>
                 <tr>
@@ -36,9 +36,15 @@
             <tbody>
                 {% for row in results %}
                 <tr>
-                    <td>{{ row.roll }}</td>
+                    <td>{{ row.roll_no }}</td>
                     <td>{{ row.score }}</td>
-                    <td>{{ row.status }}</td>
+                    <td>
+                        {% if row.score >= exam.pass_mark %}
+                            Pass
+                        {% else %}
+                            Fail
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
