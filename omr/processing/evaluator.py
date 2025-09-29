@@ -192,10 +192,10 @@ def process_sheet(
         bubbles, detected_image = detect_bubbles(cropped)
 
         # evaluate sheet
-        results, marked_image = group_and_evaluate(
+        answers, marked_image = group_and_evaluate(
             bubbles, detected_image, thresh, options
         )
-        student_info = evaluate_sheet(results, student_data, answer_keys)
+        result = evaluate_sheet(answers, student_data, answer_keys)
 
         # save the cropped sheet back to the whole sheet
         result_img = warp_back(image, marked_image, corners)
@@ -208,10 +208,10 @@ def process_sheet(
         except FileNotFoundError:
             pass
 
-        return student_info
+        return result, answers
     except Exception as error:
         print(f"error while processing: {error}")
-        return img_filename
+        return img_filename, None
 
 
 

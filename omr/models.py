@@ -28,3 +28,19 @@ class Exam(models.Model):
     subject = models.CharField(max_length=255, blank=True, null=True)
     pass_mark = models.IntegerField(blank=True, null=True)
     exam_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+
+
+
+class Result(models.Model):
+    exam = models.ForeignKey(Exam, on_delete=models.CASCADE, related_name="results")
+    roll_no = models.CharField(max_length=20)
+    answers = models.JSONField(blank=True, null=True)  # optional: store {"Q1": "A", "Q2": "B"}
+    score = models.FloatField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("exam", "roll_no")  # one result per student per exam
+
+    def __str__(self):
+        return f"{self.roll_no} - {self.exam.exam_name} ({self.score})"

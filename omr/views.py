@@ -14,7 +14,8 @@ from django.core.cache import cache
 import uuid
 from PIL import Image, ImageDraw, ImageFont
 from django.utils.timezone import now
-from .models import Exam
+from .models import Exam, Result
+import random
 
 
 
@@ -97,7 +98,7 @@ def process_ajax(request):
 
             # Process each sheet
             for i, (student_data, sheet_file) in enumerate(zip(all_students_data, all_sheet_files), 1):
-                result = process_sheet(
+                result, answers  = process_sheet(
                     sheet_file, student_data,
                     answer_keys=answer_keys,
                     converted_folder=converted_img_path,
@@ -105,10 +106,18 @@ def process_ajax(request):
                     thresh=MEAN_INTENSITY_THRESHOLD,
                     options=OPTIONS[:template_config.get("options")],
                 )
-                if type(result) == str:
+                if not answers:
                     errored_files.append(result)
-                else:
-                    final_results.append(result)
+
+                # save results
+                result, _ = Result.objects.update_or_create(
+                    exam=exam,
+                    roll_no=result['roll'],
+                    defaults={
+                        "answers": answers,
+                        "score": result['score'],
+                    }
+                )
 
                 # Stream progress update
                 progress = int((i / total) * 100)
