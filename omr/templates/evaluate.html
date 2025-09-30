@@ -111,10 +111,7 @@
                     <td>{{ exam.exam_name }}</td>
                     <td>{{ exam.date }}</td>
                     <td>
-                        <!-- raw DB id link (less secure) -->
-                        <a href="{% url 'exam_detail' exam.id %}">Open</a>
-
-                        <!-- recommended: shareable public URL using UUID token -->
+                        <!-- shareable public URL using UUID token -->
                         <br />
                         <small>Public link:</small>
                         <input
