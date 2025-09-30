@@ -19,6 +19,8 @@ from .models import Exam, Result
 import random
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
+from io import BytesIO
+from reportlab.pdfgen import canvas
 
 
 
@@ -183,16 +185,15 @@ def results_view(request, exam_id):
 @csrf_protect
 def convert_to_pdf(request):
     if request.method != "POST":
-        return StreamingHttpResponse(json.dumps({"error": "Invalid request"}) + "\n",
-                                     content_type="application/json")
+        return HttpResponse("Invalid request", status=400)
 
     try:
         body = json.loads(request.body.decode("utf-8"))
-        exam_name = body.get("examName", f"exam_{now().strftime('%Y%m%d')}") # default: current date
+        exam_name = body.get("examName", f"exam_{now().strftime('%Y%m%d')}")  # default: current date
         file_name = exam_name.lower().replace(" ", "_")
         image_folder = EVALUATED_IMG_PATH.format(file_name)
 
-        # Get only image files from the image_folder
+        # Collect image paths
         image_paths = [
             os.path.join(image_folder, f)
             for f in os.listdir(image_folder)
@@ -200,50 +201,39 @@ def convert_to_pdf(request):
         ]
 
         if not image_paths:
-            return StreamingHttpResponse(json.dumps({"error": "No images found"}) + "\n",
-                                         content_type="application/json")
+            return HttpResponse("No images found", status=404)
 
-        def event_stream():
-            total = len(image_paths)
-            pil_images = []
+        # Build PDF in memory
+        buffer = BytesIO()
 
-            for i, path in enumerate(image_paths):
-                img = Image.open(path).convert("RGB")
-                pil_images.append(img)
+        # Create cover page with exam name
+        width, height = 2480, 3508
+        cover = Image.new("RGB", (width, height), color="white")
+        draw = ImageDraw.Draw(cover)
+        try:
+            font = ImageFont.truetype("arial.ttf", 120)
+        except:
+            font = ImageFont.load_default()
 
-                progress = int(((i + 1) / total) * 90)
-                yield json.dumps({"progress": progress}) + "\n"
+        bbox = draw.textbbox((0, 0), exam_name, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
 
-            os.makedirs(image_folder, exist_ok=True)
-            pdf_path = os.path.join(image_folder, f"{file_name}.pdf")
+        x = (width - text_width) / 2
+        y = (height - text_height) / 2
+        draw.text((x, y), exam_name, fill="black", font=font)
 
-            # Create cover page with Exam name
-            width, height = 2480, 3508
-            cover = Image.new("RGB", (width, height), color="white")
-            draw = ImageDraw.Draw(cover)
-            try:
-                font = ImageFont.truetype("arial.ttf", 120)
-            except:
-                font = ImageFont.load_default()
+        # Convert rest of the sheets
+        pil_images = [Image.open(path).convert("RGB") for path in image_paths]
 
-            bbox = draw.textbbox((0, 0), exam_name, font=font)
-            text_width = bbox[2] - bbox[0]
-            text_height = bbox[3] - bbox[1]
+        # Save all pages into BytesIO instead of disk
+        cover.save(buffer, format="PDF", save_all=True, append_images=pil_images)
+        buffer.seek(0)
 
-            x = (width - text_width) / 2
-            y = (height - text_height) / 2
-            draw.text((x, y), exam_name, fill="black", font=font)
-
-            # Save PDF: exam_name.pdf
-            cover.save(pdf_path, save_all=True, append_images=pil_images)
-            print('saved to ', pdf_path)
-
-            yield json.dumps({"progress": 100}) + "\n"
-            pdf_url = os.path.join(settings.MEDIA_URL, "exams", exam_name, f"{exam_name}.pdf")
-            yield json.dumps({"pdf_url": pdf_url}) + "\n"
-
-        return StreamingHttpResponse(event_stream(), content_type="application/json")
+        # Return as downloadable file
+        response = HttpResponse(buffer, content_type="application/pdf")
+        response['Content-Disposition'] = f'attachment; filename="{file_name}.pdf"'
+        return response
 
     except Exception as e:
-        return StreamingHttpResponse(json.dumps({"error": str(e)}) + "\n",
-                                     content_type="application/json")
+        return HttpResponse(f"Error generating PDF: {str(e)}", status=500)

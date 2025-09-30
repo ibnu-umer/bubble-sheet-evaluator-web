@@ -63,95 +63,37 @@
             const examName = "{{ exam.exam_name|escapejs }}"
             const examNameLower = examName.toLowerCase().replace(/\s+/g, "_");
 
-            document.getElementById("convert-pdf-btn").addEventListener(
-                "click",
-                async function(event) {
-                    event.preventDefault();
+            document.getElementById("convert-pdf-btn").addEventListener("click", async function(event) {
+                event.preventDefault();
 
-                    const progressContainer = document.getElementById("progress-container");
-                    const progressBar = document.getElementById("progress-bar");
+                try {
+                    const response = await fetch("{% url 'convert_to_pdf' %}", {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": "{{ csrf_token }}",
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ examName: examName }),
+                    });
 
-                    // Reset & show progress bar
-                    if (progressContainer && progressBar) {
-                        progressContainer.style.display = "block";
-                        progressBar.style.width = "0%";
-                        progressBar.innerText = "0%";
-                    }
+                    if (!response.ok) throw new Error("Failed to generate PDF");
 
-                    try {
-                        const response = await fetch("{% url 'convert_to_pdf' %}", {
-                            method: "POST",
-                            headers: {
-                                "X-CSRFToken": "{{ csrf_token }}",
-                                "Content-Type": "application/json",
-                            },
-                            body: JSON.stringify({ examName: examName }),
-                        });
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
 
-                        const reader = response.body.getReader();
-                        const decoder = new TextDecoder();
-                        let buffer = "";
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `${examName}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
 
-                        function handleData(data) {
-                            console.log("handleData called with:", data);
-
-                            // Update progress
-                            if (data.progress !== undefined && progressBar) {
-                                progressBar.style.width = data.progress + "%";
-                                progressBar.innerText = data.progress + "%";
-                            }
-
-                            // Handle result URL
-                            if (data.pdf_url) {
-                                const resultsDiv = document.getElementById("results");
-                                if (resultsDiv) {
-                                    resultsDiv.style.display = "block";
-                                    resultsDiv.innerHTML = `
-                                        <p>PDF created successfully!</p>
-                                        <a href="${data.pdf_url}" target="_blank" class="btn btn-primary">
-                                            Download PDF
-                                        </a>
-                                    `;
-                                }
-                            }
-                        }
-
-                        while (true) {
-                            const { done, value } = await reader.read();
-                            if (done) break;
-
-                            buffer += decoder.decode(value, { stream: true });
-
-                            let parts = buffer.split("\n");
-                            buffer = parts.pop();
-
-                            for (let part of parts) {
-                                if (!part.trim()) continue;
-                                try {
-                                    const data = JSON.parse(part);
-                                    handleData(data);
-                                } catch (e) {
-                                    console.error("Failed to parse chunk:", part, e);
-                                }
-                            }
-                        }
-
-                        // Process leftover
-                        if (buffer.trim()) {
-                            try {
-                                const data = JSON.parse(buffer);
-                                handleData(data);
-                            } catch (e) {
-                                console.error("Failed to parse leftover:", buffer, e);
-                            }
-                        }
-                    } catch (err) {
-                        console.error("Error:", err);
-                        if (progressContainer) progressContainer.style.display = "none";
-                        alert("Failed to convert PDF. Please try again.");
-                    }
+                    window.URL.revokeObjectURL(url);
+                } catch (err) {
+                    console.error("Error:", err);
+                    alert("Failed to convert PDF. Please try again.");
                 }
-            );
+            });
 
 
             // Function to export table to CSV
