@@ -183,7 +183,7 @@ def results_view(request, exam_id):
 
 
 @csrf_protect
-def convert_to_pdf(request):
+def download_sheet_pdf(request):
     if request.method != "POST":
         return HttpResponse("Invalid request", status=400)
 

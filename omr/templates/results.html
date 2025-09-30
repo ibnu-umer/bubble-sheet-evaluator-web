@@ -50,10 +50,10 @@
             </tbody>
         </table>
 
-        <button id="convert-result-csv">Convert Result into CSV</button>
-        <button id="convert-result-xlsx">Convert Result into Excel</button>
+        <button id="download-csv-btn">Download CSV</button>
+        <button id="download-xlsx-btn">Download Excel</button>
 
-        <button id="convert-pdf-btn">Convert Images to PDF</button>
+        <button id="download-pdf-btn">Download Sheet PDF</button>
         <div id="progress-container">
             <div id="progress-bar">0%</div>
         </div>
@@ -63,11 +63,14 @@
             const examName = "{{ exam.exam_name|escapejs }}"
             const examNameLower = examName.toLowerCase().replace(/\s+/g, "_");
 
-            document.getElementById("convert-pdf-btn").addEventListener("click", async function(event) {
+            document.getElementById("download-pdf-btn").addEventListener("click", async function(event) {
                 event.preventDefault();
+                let btn = this;
+                btn.textContent = "Downloading...";
+                btn.disabled = true;
 
                 try {
-                    const response = await fetch("{% url 'convert_to_pdf' %}", {
+                    const response = await fetch("{% url 'download_sheet_pdf' %}", {
                         method: "POST",
                         headers: {
                             "X-CSRFToken": "{{ csrf_token }}",
@@ -91,13 +94,22 @@
                     window.URL.revokeObjectURL(url);
                 } catch (err) {
                     console.error("Error:", err);
-                    alert("Failed to convert PDF. Please try again.");
+                    alert("Failed to download PDF. Please try again.");
                 }
+
+                setTimeout(() => {
+                    btn.textContent = "Download Sheet PDF";
+                    btn.disabled = false;
+                }, 3000);
             });
 
 
             // Function to export table to CSV
-            function exportTableToCSV(filename) {
+            function downloadTableCSV(filename) {
+                let btn = document.getElementById("download-csv-btn");
+                btn.textContent = "Downloading...";
+                btn.disabled = true;
+
                 let csv = [];
                 let rows = document.querySelectorAll("#result-table tr");
 
@@ -115,24 +127,38 @@
                 downloadLink.download = filename;
                 downloadLink.href = URL.createObjectURL(csvFile);
                 downloadLink.click();
+
+                setTimeout(() => {
+                    btn.textContent = "Download CSV";
+                    btn.disabled = false;
+                }, 2000);
             }
 
 
             // Function to export table to Excel
-            function exportTableToExcel(filename) {
+            function downloadTableExcel(filename) {
+                let btn = document.getElementById("download-xlsx-btn");
+                btn.textContent = "Downloading...";
+                btn.disabled = true;
+
                 let table = document.getElementById("result-table");
                 let wb = XLSX.utils.table_to_book(table, { sheet: "Results" });
                 XLSX.writeFile(wb, filename, { bookType: "xlsx", type: "binary" });
+
+                setTimeout(() => {
+                    btn.textContent = "Download Excel";
+                    btn.disabled = false;
+                }, 2000);
             }
 
 
             // Event Listeners
-            document.getElementById("convert-result-csv").addEventListener("click", function () {
-                exportTableToCSV(examNameLower + ".csv");
+            document.getElementById("download-csv-btn").addEventListener("click", function () {
+                downloadTableCSV(examNameLower + ".csv");
             });
 
-            document.getElementById("convert-result-xlsx").addEventListener("click", function () {
-                exportTableToExcel(examNameLower + ".xlsx");
+            document.getElementById("download-xlsx-btn").addEventListener("click", function () {
+                downloadTableExcel(examNameLower + ".xlsx");
             });
         </script>
     </body>

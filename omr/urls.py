@@ -11,5 +11,5 @@ urlpatterns = [
     path('evaluator/', views.evaluator, name='evaluator'),
     path('process_ajax/', views.process_ajax, name='process_ajax'),
     path("results/<uuid:exam_id>/", views.results_view, name="results_page"),
-    path("convert-to-pdf/", views.convert_to_pdf, name="convert_to_pdf"),
+    path("convert-to-pdf/", views.download_sheet_pdf, name="download_sheet_pdf"),
 ]
