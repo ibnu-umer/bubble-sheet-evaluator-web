@@ -60,7 +60,7 @@
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
         <script>
-            const examName = "{{ examName|escapejs }}"
+            const examName = "{{ exam.exam_name|escapejs }}"
             const examNameLower = examName.toLowerCase().replace(/\s+/g, "_");
 
             document.getElementById("convert-pdf-btn").addEventListener(
@@ -180,7 +180,7 @@
             function exportTableToExcel(filename) {
                 let table = document.getElementById("result-table");
                 let wb = XLSX.utils.table_to_book(table, { sheet: "Results" });
-                XLSX.writeFile(wb, filename);
+                XLSX.writeFile(wb, filename, { bookType: "xlsx", type: "binary" });
             }
 
 
