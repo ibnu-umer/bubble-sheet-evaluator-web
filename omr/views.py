@@ -75,7 +75,7 @@ def process_ajax(request):
         template = request.POST.get("sheet_template")
         sheet_files = request.FILES.getlist("sheet_files")
         answer_file = request.FILES.get("answer_file")
-        exam_name = request.POST.get("exam_name").lower().replace(" ", "_")
+        exam_name = request.POST.get("exam_name")
         org_name = request.POST.get("org_name")
         subject = request.POST.get("subject")
         pass_mark = request.POST.get("pass_mark")
@@ -93,8 +93,8 @@ def process_ajax(request):
             user=request.user
         )
 
-        converted_img_path = CONVERTED_IMG_PATH.format(exam_name)
-        evaluated_img_path = EVALUATED_IMG_PATH.format(exam_name)
+        converted_img_path = CONVERTED_IMG_PATH.format(exam_name.lower().replace(" ", "_"))
+        evaluated_img_path = EVALUATED_IMG_PATH.format(exam_name.lower().replace(" ", "_"))
 
         def stream():
             final_results = []

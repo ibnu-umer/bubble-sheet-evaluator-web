@@ -39,9 +39,6 @@ class Exam(models.Model):
         blank=True
     )
 
-    # Secure public share token (don't want to expose DB IDs)
-    share_uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=False)
-
     def __str__(self):
         return f"{self.exam_name} ({self.subject})"
 
