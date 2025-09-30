@@ -6,6 +6,7 @@ from django.conf import settings
 from .processing.pdf_utils import pdf_to_images
 from .processing.evaluator import process_sheet, load_answers
 from django.views.decorators.csrf import csrf_protect
+from django.contrib.auth.decorators import login_required
 from .constants import *
 import os
 from django.http import StreamingHttpResponse, JsonResponse, HttpResponse
@@ -16,10 +17,31 @@ from PIL import Image, ImageDraw, ImageFont
 from django.utils.timezone import now
 from .models import Exam, Result
 import random
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import login
 
 
 
 
+
+
+
+def signup(request):
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect("evaluator")
+    else:
+        form = UserCreationForm()
+    return render(request, "signup.html", {"form": form})
+
+
+
+
+
+@login_required
 def evaluator(request):
     if request.method == 'POST':
         form = UploadForm(request.POST, request.FILES)
@@ -42,10 +64,12 @@ def evaluator(request):
         form = UploadForm()
 
     recent = UploadLog.objects.order_by('-uploaded_at')[:20]
-    return render(request, 'evaluate.html', {'form': form, 'recent': recent})
+    exams = request.user.exams.all().order_by('-exam_date')
+    return render(request, 'evaluate.html', {'form': form, 'recent': recent, 'exams': exams})
 
 
 
+@login_required
 def process_ajax(request):
     if request.method == "POST":
         template = request.POST.get("sheet_template")
@@ -66,6 +90,7 @@ def process_ajax(request):
             exam_id=exam_id,
             subject=subject,
             pass_mark=pass_mark,
+            user=request.user
         )
 
         converted_img_path = CONVERTED_IMG_PATH.format(exam_name)
@@ -128,6 +153,7 @@ def process_ajax(request):
             cache.set(
                 exam_id,
                 {
+                    #! Handle errored files
                     "errors": errored_files
                 },
                 timeout=600
@@ -142,27 +168,10 @@ def process_ajax(request):
 
 
 
-
-
-
+@login_required
 def results_view(request, exam_id):
-    # cached_data = cache.get(str(exam_id))
     exam = Exam.objects.get(exam_id=exam_id)
     results = Result.objects.filter(exam=exam)
-
-    # if cached_data:
-    #     final_results = cached_data.get("results", [])
-    #     errored_files = cached_data.get("errors", [])
-    # else:
-    #     final_results = []
-    #     errored_files = []
-
-    # if not final_results:
-    #     return HttpResponse("No results found or expired", status=404)
-
-    # add status to the final results
-    # for result in final_results:
-    #     result["status"] = "Pass" if result.get("score") > PASS_MARK else "Fail"
 
     return render(request, "results.html", {
         "exam": exam,

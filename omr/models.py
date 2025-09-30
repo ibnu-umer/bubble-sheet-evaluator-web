@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 import uuid
 
 
@@ -28,6 +29,21 @@ class Exam(models.Model):
     subject = models.CharField(max_length=255, blank=True, null=True)
     pass_mark = models.IntegerField(blank=True, null=True)
     exam_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+
+    # owner / who created the exam
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="exams",
+        null=True,        # if you have old exams, set nullable and migrate, then backfill
+        blank=True
+    )
+
+    # Secure public share token (don't want to expose DB IDs)
+    share_uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=False)
+
+    def __str__(self):
+        return f"{self.exam_name} ({self.subject})"
 
 
 

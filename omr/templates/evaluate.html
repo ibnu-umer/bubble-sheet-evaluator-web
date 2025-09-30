@@ -23,7 +23,9 @@
                 margin-top: 20px;
                 display: none;
             }
-            table, th, td {
+            table,
+            th,
+            td {
                 border: 1px solid black;
                 border-collapse: collapse;
                 padding: 5px;
@@ -64,9 +66,11 @@
             .preview-overlay {
                 display: none; /* hidden by default */
                 position: fixed;
-                top: 0; left: 0;
-                width: 100%; height: 100%;
-                background: rgba(0,0,0,0.8);
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
                 justify-content: center;
                 align-items: center;
                 z-index: 1000;
@@ -75,7 +79,7 @@
                 max-width: 90%;
                 max-height: 90%;
                 border-radius: 10px;
-                box-shadow: 0 0 15px rgba(0,0,0,0.5);
+                box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
             }
             .close-btn {
                 position: absolute;
@@ -91,6 +95,42 @@
     <body>
         <h1>OMR Evaluation</h1>
 
+        <table>
+            <thead>
+                <tr>
+                    <th>Exam ID</th>
+                    <th>Name</th>
+                    <th>Date</th>
+                    <th>Share</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for exam in exams %}
+                <tr>
+                    <td>{{ exam.id }}</td>
+                    <td>{{ exam.exam_name }}</td>
+                    <td>{{ exam.date }}</td>
+                    <td>
+                        <!-- raw DB id link (less secure) -->
+                        <a href="{% url 'exam_detail' exam.id %}">Open</a>
+
+                        <!-- recommended: shareable public URL using UUID token -->
+                        <br />
+                        <small>Public link:</small>
+                        <input
+                            type="text"
+                            value="{{ request.scheme }}://{{ request.get_host }}{% url 'public_results_by_token' exam.share_uuid %}"
+                            readonly
+                            style="width: 350px"
+                        />
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4">No exams yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
         {% if messages %}
         <ul>
             {% for m in messages %}
@@ -105,58 +145,66 @@
             <h2>Select a Sheet Template</h2>
             <div class="template-options">
                 <div class="template-card">
-                    <input type="radio" id="AS-01" name="sheet_template" value="AS-01" required>
+                    <input type="radio" id="AS-01" name="sheet_template" value="AS-01" required />
                     <label for="AS-01">AS-01</label>
-                    <button class="preview-btn" type="button" data-img="{% static 'sheet_images/AS-01.png' %}">Preview</button>
+                    <button class="preview-btn" type="button" data-img="{% static 'sheet_images/AS-01.png' %}">
+                        Preview
+                    </button>
                 </div>
                 <div class="template-card">
-                    <input type="radio" id="AS-02" name="sheet_template" value="AS-02">
+                    <input type="radio" id="AS-02" name="sheet_template" value="AS-02" />
                     <label for="AS-02">AS-02</label>
-                    <button class="preview-btn" type="button" data-img="{% static 'sheet_images/AS-02.png' %}">Preview</button>
+                    <button class="preview-btn" type="button" data-img="{% static 'sheet_images/AS-02.png' %}">
+                        Preview
+                    </button>
                 </div>
                 <div class="template-card">
-                    <input type="radio" id="AS-03" name="sheet_template" value="AS-03">
+                    <input type="radio" id="AS-03" name="sheet_template" value="AS-03" />
                     <label for="AS-03">AS-03</label>
-                    <button class="preview-btn" type="button" data-img="{% static 'sheet_images/AS-03.png' %}">Preview</button>
+                    <button class="preview-btn" type="button" data-img="{% static 'sheet_images/AS-03.png' %}">
+                        Preview
+                    </button>
                 </div>
                 <div class="template-card">
-                    <input type="radio" id="AS-04" name="sheet_template" value="AS-04">
+                    <input type="radio" id="AS-04" name="sheet_template" value="AS-04" />
                     <label for="AS-04">AS-04</label>
-                    <button class="preview-btn" type="button" data-img="{% static 'sheet_images/AS-04.png' %}">Preview</button>
+                    <button class="preview-btn" type="button" data-img="{% static 'sheet_images/AS-04.png' %}">
+                        Preview
+                    </button>
                 </div>
             </div>
 
             <div class="preview-overlay" id="previewOverlay">
                 <span class="close-btn" id="closePreview">&times;</span>
-                <img id="previewImage" src="" alt="Template Preview">
+                <img id="previewImage" src="" alt="Template Preview" />
             </div>
 
             <h3>Exam Date</h3>
-            <input for="exam-date" name="exam_date" type="date" id="dateInput">
+            <input for="exam-date" name="exam_date" type="date" id="dateInput" />
 
             <h3>Exam Name</h3>
-            <input for="exam-name" name="exam_name" type="text" required>
+            <input for="exam-name" name="exam_name" type="text" required />
 
             <h3>College/School Name</h3>
-            <input for="org-name" name="org_name" type="text" required>
+            <input for="org-name" name="org_name" type="text" required />
 
             <h3>Subject</h3>
-            <input for="subject" name="subject" type="text" required>
+            <input for="subject" name="subject" type="text" required />
 
             <h3>Pass Mark</h3>
-            <input for="pass-mark" name="pass_mark" type="number" required>
+            <input for="pass-mark" name="pass_mark" type="number" required />
 
             <!-- Upload Section -->
             <h3>Upload Files</h3>
             <div>
                 <label for="sheet_upload">Upload Sheet PDFs:</label>
-                <input type="file" name="sheet_files" id="sheet_upload" accept=".pdf" multiple required>
+                <input type="file" name="sheet_files" id="sheet_upload" accept=".pdf" multiple required />
                 <ul id="sheetList"></ul>
             </div>
 
             <div>
                 <label for="answer_upload">Upload Answer Key (CSV/JSON):</label>
-                <input type="file" name="answer_file" id="answer_upload" accept=".csv,.json" required>
+                <input type="file" name="answer_file" id="answer_upload" accept=".csv,.json" required />
                 <ul id="answerList"></ul>
             </div>
 
@@ -168,7 +216,7 @@
             <div id="progress-bar">0%</div>
         </div>
 
-        <div id="results" style="display:none;"></div>
+        <div id="results" style="display: none"></div>
 
         <script>
             document.addEventListener("DOMContentLoaded", function () {
@@ -189,7 +237,7 @@
                             const dt = new DataTransfer();
                             Array.from(input.files)
                                 .filter((_, i) => i !== index)
-                                .forEach(f => dt.items.add(f));
+                                .forEach((f) => dt.items.add(f));
                             input.files = dt.files;
                             handleMultiFileList(input, listId);
                         };
@@ -232,8 +280,7 @@
                 });
             });
 
-
-            document.getElementById("process-form").addEventListener("submit", async function(event) {
+            document.getElementById("process-form").addEventListener("submit", async function (event) {
                 event.preventDefault(); // stop normal submit
 
                 const form = document.getElementById("process-form");
@@ -248,7 +295,7 @@
 
                 // Add multiple sheet files
                 const sheetInput = document.getElementById("sheet_upload");
-                Array.from(sheetInput.files).forEach(file => {
+                Array.from(sheetInput.files).forEach((file) => {
                     formData.append("sheet_files", file);
                 });
 
@@ -264,7 +311,7 @@
                     headers: {
                         "X-CSRFToken": "{{ csrf_token }}",
                     },
-                    body: formData
+                    body: formData,
                 });
 
                 // --- Streaming response handling ---
@@ -333,7 +380,7 @@
             const previewImage = document.getElementById("previewImage");
             const closeBtn = document.getElementById("closePreview");
 
-            previewButtons.forEach(btn => {
+            previewButtons.forEach((btn) => {
                 btn.addEventListener("click", () => {
                     const imgSrc = btn.getAttribute("data-img");
                     previewImage.src = imgSrc;
@@ -354,10 +401,8 @@
             });
 
             // --- Default exam date ---
-            const today = new Date().toISOString().split('T')[0];
+            const today = new Date().toISOString().split("T")[0];
             document.getElementById("dateInput").value = today;
-
         </script>
     </body>
 </html>
-
