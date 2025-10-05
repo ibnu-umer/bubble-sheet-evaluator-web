@@ -95,7 +95,7 @@
                 <tr>
                     <th>Preview</th>
                     <th>Roll No</th>
-                    <th>Mark</th>
+                    <th>Score</th>
                     <th>Submit</th>
                 </tr>
             </thead>
@@ -105,8 +105,8 @@
                         <td><a href="#overlay-{{ forloop.counter }}">
                             <button type="button">View Image</button></a>
                         </td>
-                        <td><input type="number" name="rollno" class="rollno-input" min="0" max="999999" required></td>
-                        <td><input type="number" name="mark" class="mark-input" min="0" max="100" required></td>
+                        <td><input type="number" name="roll_no" class="rollno-input" min="0" max="999999" required></td>
+                        <td><input type="number" name="score" class="score-input" min="0" max="100" required></td>
                         <td><button type="button" class="submit-btn">Submit</button></td>
                     </tr>
 
@@ -121,7 +121,7 @@
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
         <script>
-            const examName = "{{ exam.exam_name|escapejs }}"
+            const examName = "{{ exam.exam_name|escapejs }}";
             const examNameLower = examName.toLowerCase().replace(/\s+/g, "_");
 
             document.getElementById("download-pdf-btn").addEventListener("click", async function(event) {
@@ -223,48 +223,70 @@
             });
 
             // Submit error table data
+            const exam_id = "{{ exam.exam_id|safe }}"
             document.addEventListener("DOMContentLoaded", function() {
-            const buttons = document.querySelectorAll(".submit-btn");
+                const buttons = document.querySelectorAll(".submit-btn");
 
-            buttons.forEach(btn => {
-                btn.addEventListener("click", function() {
-                    const row = btn.closest("tr");
-                    const rollno = row.querySelector(".rollno-input").value;
-                    const mark = row.querySelector(".mark-input").value;
+                buttons.forEach(btn => {
+                    btn.addEventListener("click", function() {
+                        const row = btn.closest("tr");
+                        const roll_no = row.querySelector(".rollno-input").value;
+                        const score = row.querySelector(".score-input").value;
 
-                    if (!rollno || !mark) {
-                        alert("Please fill roll number and mark first.");
-                        return;
-                    }
-
-                    const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
-
-                    fetch("{% url 'submit_mark' %}", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/x-www-form-urlencoded",
-                            "X-CSRFToken": csrfToken
-                        },
-                        body: new URLSearchParams({
-                            rollno: rollno,
-                            mark: mark,
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            btn.textContent = "✅ Saved";
-                            btn.disabled = true;
-                        } else {
-                            alert("❌ Error: " + (data.error || "Unknown"));
+                        if (!roll_no || !score) {
+                            alert("Please fill roll number and mark first.");
+                            return;
                         }
-                    })
-                    .catch(err => {
-                        alert("Server error: " + err);
-                    });
+
+                        const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
+
+                        fetch("{% url 'submit_mark' %}", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/x-www-form-urlencoded",
+                                "X-CSRFToken": csrfToken
+                            },
+                            body: new URLSearchParams({
+                                roll_no: roll_no,
+                                score: Number(score),
+                                exam_id: exam_id,
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                const tableBody = document.querySelector("#result-table tbody");
+                                let existingRow = Array.from(tableBody.rows).find(
+                                    row => row.cells[0].textContent === roll_no
+                                );
+                                if (existingRow) {
+                                    alert(`Roll No: ${roll_no} already exists`);
+                                } else {
+                                    updateResultTable(roll_no, score);
+                                    btn.textContent = "✅ Saved";
+                                    btn.disabled = true;
+                                }
+                            }
+                        })
+                        .catch(err => {
+                            alert("Server error: " + err);
+                        });
                     });
                 });
             });
+
+            const passMark = Number("{{ exam.pass_mark|safe }}");
+            function updateResultTable(roll_no, score) {
+                const tableBody = document.querySelector("#result-table tbody");
+                const newRow = document.createElement("tr");
+
+                newRow.innerHTML = `
+                    <td>${roll_no}</td>
+                    <td>${score}</td>
+                    <td>${score >= passMark ? 'Pass' : 'Fail'}</td>
+                `;
+                tableBody.appendChild(newRow);
+            }
         </script>
     </body>
 </html>

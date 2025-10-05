@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .forms import UploadForm
 from .models import UploadLog
@@ -21,7 +21,6 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 from io import BytesIO
 from reportlab.pdfgen import canvas
-
 
 
 
@@ -231,8 +230,19 @@ def download_sheet_pdf(request):
 @login_required
 def submit_mark(request):
     if request.method == "POST":
-        rollno = request.POST.get("rollno")
-        mark = request.POST.get("mark")
+        roll_no = request.POST.get("roll_no")
+        score = request.POST.get("score")
+        exam_id = request.POST.get("exam_id")
+
+        exam = get_object_or_404(Exam, exam_id=exam_id)
+        Result.objects.update_or_create(
+            exam=exam,
+            roll_no=roll_no,
+            defaults={
+                "answers": {},
+                "score": score,
+            }
+        )
 
         return JsonResponse({"success": True})
 
