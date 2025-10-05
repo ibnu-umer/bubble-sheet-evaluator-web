@@ -12,40 +12,18 @@ def ensure_dir(path):
 
 
 
-def pdf_to_images(pdf_file, dpi=None, poppler_path=None, save_path=None):
-    """
-    Convert an uploaded PDF (in-memory) into image files and extract student data.
-    Saves each page as a PNG file, named with the student's roll number in save_path.
-
-    Args:
-        pdf_file (InMemoryUploadedFile): Uploaded PDF file object.
-        dpi (int, optional): Resolution for conversion.
-        poppler_path (str, optional): Path to poppler binaries (Windows).
-        save_path (str, optional): Directory to save images.
-
-    Returns:
-        list[dict]: A list of student metadata dictionaries, one per PDF page.
-                    Example: [{'roll': '12345', 'name': 'Alice'}, ...]
-    """
-    # Read PDF bytes directly from uploaded file
+def pdf_to_images(pdf_file, dpi=None, poppler_path=None):
     pdf_bytes = pdf_file.read()
-    images = convert_from_bytes(pdf_bytes, dpi=dpi, poppler_path=poppler_path)
+    pil_images = convert_from_bytes(pdf_bytes, dpi=dpi, poppler_path=poppler_path)
 
-    if save_path:
-        os.makedirs(save_path, exist_ok=True)
+    # Convert PIL image --> numpy arr --> opencv BGR Image
+    cv2_images = []
+    for pil_img in pil_images:
+        np_img = np.array(pil_img)
+        gray_img = cv2.cvtColor(np_img, cv2.COLOR_RGB2GRAY)
+        cv2_images.append(gray_img)
 
-    students_data = []
-    for img in images:
-        img_arr = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-
-        student_data = extract_qr_data(img_arr)
-        students_data.append(student_data)
-
-        if save_path:
-            filename = f"{student_data.get('roll', 'unknown')}.png"
-            img.save(os.path.join(save_path, filename), "PNG")
-
-    return students_data
+    return cv2_images
 
 
 
