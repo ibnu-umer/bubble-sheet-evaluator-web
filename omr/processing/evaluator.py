@@ -174,7 +174,7 @@ def process_sheet(
         )
         result = evaluate_sheet(answers, answer_keys)
         result_img = warp_back(image, marked_image, corners)
-        return result_img, None, roll_no
+        return result_img, result, roll_no
 
     except Exception as error:
         print(f"error while processing: {error}")
