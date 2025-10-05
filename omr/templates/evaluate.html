@@ -197,7 +197,7 @@
                 <ul id="answerList"></ul>
             </div>
 
-            <button type="submit">Start Processing</button>
+            <button type="submit" id="process-button">Start Processing</button>
         </form>
 
         <h1>Processing Sheets</h1>
@@ -269,8 +269,14 @@
                 });
             });
 
+
+            const processButton = document.getElementById("process-button");
             document.getElementById("process-form").addEventListener("submit", async function (event) {
                 event.preventDefault(); // stop normal submit
+
+                // submit button ux
+                processButton.disabled = true;
+                processButton.textContent = "Processing...";
 
                 const form = document.getElementById("process-form");
                 const formData = new FormData();
@@ -361,6 +367,9 @@
                         console.error("Failed to parse leftover:", buffer, e);
                     }
                 }
+
+                processButton.disabled = false;
+                processButton.textContent = "Process Sheets";
             });
 
             // --- Preview handling ---

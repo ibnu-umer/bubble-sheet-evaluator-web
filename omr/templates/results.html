@@ -53,7 +53,8 @@
         <h2>Evaluation Results</h2>
         <h2>{{ exam.exam_name }}</h2>
         <h3>{{ exam.org_name }}</h3>
-        <div>{{ exam.exam_date }}</div>
+        <div>Date: {{ exam.exam_date|date:"d M Y" }}</div>
+        <div>Pass Mark: <strong>{{ exam.pass_mark }}</strong></div>
         <table border="1" id="result-table">
             <thead>
                 <tr>
