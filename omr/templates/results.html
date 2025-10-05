@@ -27,26 +27,26 @@
             background: rgba(0, 0, 0, 0.8);
             justify-content: center;
             align-items: center;
-            }
+        }
 
-            .overlay:target {
+        .overlay:target {
             display: flex;
-            }
+        }
 
-            .overlay img {
+        .overlay img {
             max-width: 90%;
             max-height: 90%;
             border-radius: 10px;
-            }
+        }
 
-            .close-btn {
+        .close-btn {
             position: absolute;
             top: 20px;
             right: 40px;
             font-size: 40px;
             color: white;
             text-decoration: none;
-            }
+        }
     </style>
 </head>
     <body>
@@ -67,7 +67,7 @@
                 {% for row in results %}
                 <tr>
                     <td>{{ row.roll_no }}</td>
-                    <td>{{ row.score }}</td>
+                    <td>{{ row.score|floatformat:0 }}</td>
                     <td>
                         {% if row.score >= exam.pass_mark %}
                             Pass
