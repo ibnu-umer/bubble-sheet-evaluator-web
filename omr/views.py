@@ -4,7 +4,7 @@ from .forms import UploadForm
 from .models import UploadLog
 from django.conf import settings
 from .processing.pdf_utils import pdf_to_images
-from .processing.evaluator import process_sheet, load_answers
+from .processing.evaluator import process_sheet, load_answers, cv2_to_base64
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth.decorators import login_required
 from .constants import *
@@ -38,8 +38,6 @@ def signup(request):
     else:
         form = UserCreationForm()
     return render(request, "signup.html", {"form": form})
-
-
 
 
 
@@ -95,73 +93,56 @@ def process_ajax(request):
             user=request.user
         )
 
-        converted_img_path = CONVERTED_IMG_PATH.format(exam_name.lower().replace(" ", "_"))
-        evaluated_img_path = EVALUATED_IMG_PATH.format(exam_name.lower().replace(" ", "_"))
-
         def stream():
-            final_results = []
             answer_keys = load_answers(answer_file)
             template_config = TEMPLATE_CONFIG.get(template)
+            sheet_images = []
 
-            # Collect all students_data from all PDFs
-            all_students_data = []
-            all_sheet_files = []
-
+            # Convert PDF sheets into PNG
             for sheet_file in sheet_files:
-                students_data = pdf_to_images(
-                    sheet_file,
-                    save_path=converted_img_path,
-                    dpi=PDF_DPI,
-                    poppler_path=POPPLER_PATH
+                sheet_images.extend(pdf_to_images(
+                        sheet_file,
+                        dpi=PDF_DPI,
+                        poppler_path=POPPLER_PATH
+                    )
                 )
-                sheet_files_local = os.listdir(converted_img_path)
 
-                # Match each image/student with its file
-                all_students_data.extend(students_data)
-                all_sheet_files.extend(sheet_files_local)
-
-            total = len(all_students_data)
-            errored_files = []
+            errored_sheets = []
+            num_of_sheets = len(sheet_images)
 
             # Process each sheet
-            for i, (student_data, sheet_file) in enumerate(zip(all_students_data, all_sheet_files), 1):
-                result, answers  = process_sheet(
-                    sheet_file, student_data,
+            for i, sheet in enumerate(sheet_images, start=1):
+                result_image, result, roll_no  = process_sheet(
+                    sheet,
                     answer_keys=answer_keys,
-                    converted_folder=converted_img_path,
-                    evaluated_folder=evaluated_img_path,
                     thresh=MEAN_INTENSITY_THRESHOLD,
                     options=OPTIONS[:template_config.get("options")],
                 )
-                if not answers:
-                    errored_files.append(result)
-
-                # save results
-                result, _ = Result.objects.update_or_create(
-                    exam=exam,
-                    roll_no=result['roll'],
-                    defaults={
-                        "answers": answers,
-                        "score": result['score'],
-                    }
-                )
+                if not result:
+                    errored_sheets.append(cv2_to_base64(result_image))
+                else:
+                    result, _ = Result.objects.update_or_create(
+                        exam=exam,
+                        roll_no=roll_no,
+                        defaults={
+                            "answers": result['answers'],
+                            "score": result['score'],
+                        }
+                    )
 
                 # Stream progress update
-                progress = int((i / total) * 100)
+                progress = int((i / num_of_sheets * 100))
                 yield json.dumps({"progress": progress}) + "\n"
 
-            os.removedirs(converted_img_path)
-            # Save results temporarily (10 min)
+            # Save data in cache temperarily (10 min)
             cache.set(
                 exam_id,
                 {
-                    #! Handle errored files
-                    "errors": errored_files
+                    "errored_sheets": errored_sheets
                 },
                 timeout=600
             )
 
-            # Send results_id at the end
             yield json.dumps({"exam_id": exam_id}) + "\n"
 
         return StreamingHttpResponse(stream(), content_type="application/json")
@@ -174,10 +155,17 @@ def process_ajax(request):
 def results_view(request, exam_id):
     exam = Exam.objects.get(exam_id=exam_id)
     results = Result.objects.filter(exam=exam)
+    try:
+        cached_data = cache.get(exam_id)
+        errored_sheets = cached_data.get("errored_sheets")
+    except Exception as err:
+        print(f"error: {err}")
+        errored_sheets = []
 
     return render(request, "results.html", {
         "exam": exam,
-        "results": results
+        "results": results,
+        "errored_sheets": errored_sheets
     })
 
 
@@ -237,3 +225,15 @@ def download_sheet_pdf(request):
 
     except Exception as e:
         return HttpResponse(f"Error generating PDF: {str(e)}", status=500)
+
+
+
+@login_required
+def submit_mark(request):
+    if request.method == "POST":
+        rollno = request.POST.get("rollno")
+        mark = request.POST.get("mark")
+
+        return JsonResponse({"success": True})
+
+    return JsonResponse({"success": False, "error": "Invalid request"})
