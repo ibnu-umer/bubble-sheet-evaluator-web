@@ -49,6 +49,7 @@ class Result(models.Model):
     roll_no = models.CharField(max_length=20)
     answers = models.JSONField(blank=True, null=True)  # optional: store {"Q1": "A", "Q2": "B"}
     score = models.FloatField()
+    sheet = models.ImageField(upload_to='evaluated/', null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 

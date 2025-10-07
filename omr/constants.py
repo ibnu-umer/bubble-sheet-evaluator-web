@@ -1,8 +1,9 @@
 MEAN_INTENSITY_THRESHOLD = 40
 PDF_DPI = 300
 POPPLER_PATH = "poppler/poppler-24.08.0/Library/bin"
-CONVERTED_IMG_PATH = "media/exams/{}/converted/"
-EVALUATED_IMG_PATH = "media/exams/{}/evaluated/"
+CONVERTED_SHEET_PATH = "media/exams/{}/converted/"
+ERRORED_SHEET_PATH = "media/exams/{}/errored/"
+EVALUATED_SHEET_PATH = "media/exams/{}/evaluated/"
 RESULT_SHEET_PATH = "media/exams/{}/results/"
 OPTIONS = ["A", "B", "C", "D", "E"]
 PASS_MARK = 10

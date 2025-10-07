@@ -75,7 +75,16 @@
                             Fail
                         {% endif %}
                     </td>
+                    <td><a href="#overlay-{{ forloop.counter }}">
+                        <button type="button">View Image</button></a>
+                    </td>
                 </tr>
+
+                <!-- Overlay Section -->
+                <div id="overlay-{{ forloop.counter }}" class="overlay">
+                    <a href="#" class="close-btn">&times;</a>
+                    <img src="{{ row.sheet.url }}" alt="Image Preview">
+                </div>
                 {% endfor %}
             </tbody>
         </table>

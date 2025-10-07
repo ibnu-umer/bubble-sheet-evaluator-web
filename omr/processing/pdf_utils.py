@@ -4,6 +4,7 @@ import os
 from pdf2image import convert_from_bytes
 from PIL import Image
 from .qr_utils import extract_qr_data
+from PIL import Image, ImageDraw, ImageFont
 
 
 
@@ -31,3 +32,22 @@ def convert_images_to_pdf(image_paths, output_path):
     images = [Image.open(img).convert("RGB") for img in image_paths]
     images[0].save(output_path, save_all=True, append_images=images[1:]) # Save the first image and append the rest
 
+
+
+def create_cover_page(exam_name):
+    width, height = 2480, 3508
+    cover = Image.new("RGB", (width, height), color="white")
+    draw = ImageDraw.Draw(cover)
+    try:
+        font = ImageFont.truetype("arial.ttf", 120)
+    except:
+        font = ImageFont.load_default()
+
+    bbox = draw.textbbox((0, 0), exam_name, font=font)
+    text_width = bbox[2] - bbox[0]
+    text_height = bbox[3] - bbox[1]
+
+    x = (width - text_width) / 2
+    y = (height - text_height) / 2
+    draw.text((x, y), exam_name, fill="black", font=font)
+    return cover 

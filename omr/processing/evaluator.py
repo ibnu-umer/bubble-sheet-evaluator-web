@@ -86,6 +86,7 @@ def detect_corner_markers(gray_image):
 
 
 def warp_back(original_img, processed_img, corners):
+    original_img = cv2.cvtColor(original_img, cv2.COLOR_GRAY2BGR)
     dst_pts = np.array([[0, 0], [2480, 0], [2480, 3508], [0, 3508]], dtype="float32")
     src_pts = np.array(corners, dtype="float32")
 
@@ -120,6 +121,7 @@ def detect_bubbles(cropped_image):
 
 def group_and_evaluate(circles, gray_image, mean_intensity_threshold, options):
     result, qn, offset = {}, 1, 0
+    rgb_image = cv2.cvtColor(gray_image, cv2.COLOR_GRAY2BGR)
 
     for group in circles:
         rows = []
@@ -142,13 +144,13 @@ def group_and_evaluate(circles, gray_image, mean_intensity_threshold, options):
                 color = (0, 255, 0) if mean_val < mean_intensity_threshold else (0, 0, 255)
                 if mean_val < mean_intensity_threshold:
                     result[qn] = options[j]
-                cv2.circle(gray_image, (x + offset, y), r, color, 4)
-                cv2.putText(gray_image, f'{options[j]} {round(mean_val, 2)}', ((x - 100) + offset, y - 55),
+                cv2.circle(rgb_image, (x + offset, y), r, color, 4)
+                cv2.putText(rgb_image, f'{options[j]} {round(mean_val, 2)}', ((x - 100) + offset, y - 55),
                             cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 3)
             qn += 1
         offset = gray_image.shape[1] // 2
 
-    return result, gray_image
+    return result, rgb_image
 
 
 def evaluate_sheet(responses, answer_keys):
@@ -205,3 +207,7 @@ def cv2_to_base64(gray_img):
     pil_img.save(buffer, format="PNG")
     base64_str = base64.b64encode(buffer.getvalue()).decode("utf-8")
     return f"data:image/png;base64,{base64_str}"
+
+
+def get_exam_folder_name(exam_name):
+    return exam_name.lower().replace(" ", "_")
