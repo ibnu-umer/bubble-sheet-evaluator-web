@@ -15,7 +15,7 @@ from django.core.cache import cache
 import uuid
 from PIL import Image, ImageDraw, ImageFont
 from django.utils.timezone import now
-from .models import Exam, Result
+from .models import Exam, Result, Errors
 import random
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
@@ -125,11 +125,11 @@ def process_ajax(request):
                     thresh=MEAN_INTENSITY_THRESHOLD,
                     options=OPTIONS[:template_config.get("options")],
                 )
-                if result:
-                    _, buffer = cv2.imencode('.png', result_image)
-                    image_file = ContentFile(buffer.tobytes(), name=f'{exam.id}-{roll_no}.png')
+                _, buffer = cv2.imencode('.png', result_image)
+                image_file = ContentFile(buffer.tobytes(), name=f'{exam.id}-{roll_no}.png')
 
-                    result, _ = Result.objects.update_or_create(
+                if result:
+                    Result.objects.update_or_create(
                         exam=exam,
                         roll_no=roll_no,
                         defaults={
@@ -139,7 +139,13 @@ def process_ajax(request):
                         }
                     )
                 else:
-                    cv2.imwrite(f"{err_path}/{i:03d}.png", result_image)
+                    Errors.objects.update_or_create(
+                        exam=exam,
+                        defaults={
+                            "sheet": image_file,
+                            "reason": result,
+                        }
+                    )
 
                 # Stream progress update
                 progress = int((i / num_of_sheets * 100))
@@ -157,22 +163,12 @@ def process_ajax(request):
 def results_view(request, exam_id):
     exam = get_object_or_404(Exam, exam_id=exam_id)
     results = Result.objects.filter(exam=exam)
-    errored_sheets = []
-    # Retrieve errored sheetes
-    try:
-        file_name = get_exam_folder_name(exam.exam_name)
-        err_path = ERRORED_SHEET_PATH.format(file_name)
-        for img_path in os.listdir(err_path):
-            errored_sheets.append(cv2.imread(f"{err_path}/{img_path}"))
-
-    except Exception as err:
-        print(f"error: {err}")
-
+    errors = Errors.objects.filter(exam=exam)
 
     return render(request, "results.html", {
         "exam": exam,
         "results": results,
-        "errored_sheets": errored_sheets
+        "errors": errors
     })
 
 
@@ -184,27 +180,24 @@ def download_sheet_pdf(request):
 
     try:
         body = json.loads(request.body.decode("utf-8"))
-        exam_name = body.get("examName")
-        file_name = get_exam_folder_name(exam_name)
-        image_folder = EVALUATED_SHEET_PATH.format(file_name)
-
-        image_paths = [
-            os.path.join(image_folder, f)
-            for f in os.listdir(image_folder)
-            if f.lower().endswith((".png", ".jpg", ".jpeg"))
-        ]
+        exam_id = body.get("exam_id")
+        exam = get_object_or_404(Exam, exam_id=exam_id)
+        results = Result.objects.filter(exam=exam)
+        image_paths = [res.sheet.path for res in results]
 
         if not image_paths:
-            return HttpResponse("No images found", status=404)
+            return HttpResponse("No evaluated sheets found for this exam.", status=404)
 
         # Build PDF in memory
         buffer = BytesIO()
         pil_images = [Image.open(path).convert("RGB") for path in image_paths]
-        cover = create_cover_page(exam_name)
+
+        cover = create_cover_page(exam.exam_name)
         cover.save(buffer, format="PDF", save_all=True, append_images=pil_images)
         buffer.seek(0)
 
         # Return as downloadable file
+        file_name = get_exam_folder_name(exam.exam_name)
         response = HttpResponse(buffer, content_type="application/pdf")
         response['Content-Disposition'] = f'attachment; filename="{file_name}.pdf"'
         return response

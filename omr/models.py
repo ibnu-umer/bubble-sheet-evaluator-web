@@ -49,7 +49,7 @@ class Result(models.Model):
     roll_no = models.CharField(max_length=20)
     answers = models.JSONField(blank=True, null=True)  # optional: store {"Q1": "A", "Q2": "B"}
     score = models.FloatField()
-    sheet = models.ImageField(upload_to='evaluated/', null=True)
+    sheet = models.ImageField(upload_to='evaluated/', null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -58,3 +58,17 @@ class Result(models.Model):
 
     def __str__(self):
         return f"{self.roll_no} - {self.exam.exam_name} ({self.score})"
+
+
+class Errors(models.Model):
+    exam = models.ForeignKey(Exam, on_delete=models.CASCADE, related_name="errors")
+    sheet = models.ImageField(upload_to='errored/', null=True, blank=True)
+    reason = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Error in {self.exam} - {self.reason or 'Unknown'}"
+
+
+
+

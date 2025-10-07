@@ -180,7 +180,7 @@ def process_sheet(
 
     except Exception as error:
         print(f"error while processing: {error}")
-        return image, None, None
+        return image, error, None
 
 
 
