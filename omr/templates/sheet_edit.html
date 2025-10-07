@@ -1,0 +1,205 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Create Answer Sheet</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" />
+        <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+        <style>
+            input {
+                border: 1px solid black;
+            }
+            button {
+                border: 1px solid blue;
+            }
+            .template-options {
+                display: flex;
+                gap: 20px;
+                flex-wrap: wrap;
+            }
+            .template-card {
+                border: 2px solid #ccc;
+                border-radius: 10px;
+                padding: 15px;
+                width: 200px;
+                text-align: center;
+            }
+            .template-card input[type="radio"] {
+                margin-bottom: 8px;
+            }
+            .template-card label {
+                display: block;
+                margin-bottom: 10px;
+                font-weight: bold;
+            }
+            .preview-btn {
+                background-color: #007bff;
+                color: white;
+                border: none;
+                padding: 8px 12px;
+                border-radius: 6px;
+                cursor: pointer;
+            }
+            .preview-btn:hover {
+                background-color: #0056b3;
+            }
+
+            /* Overlay modal */
+            .preview-overlay {
+                display: none; /* hidden by default */
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+            }
+            .preview-overlay img {
+                max-width: 90%;
+                max-height: 90%;
+                border-radius: 10px;
+                box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            }
+            .close-btn {
+                position: absolute;
+                top: 20px;
+                right: 30px;
+                font-size: 30px;
+                font-weight: bold;
+                color: white;
+                cursor: pointer;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Create Answer Sheet</h1>
+
+        <form method="post" enctype="multipart/form-data" id="create-sheet" action="{% url 'sheet_edit' %}">
+            {% csrf_token %}
+
+            <h2>Select a Sheet Template</h2>
+            <div class="template-options">
+                <div class="template-card">
+                    <input type="radio" id="AS-01" name="sheet_template" value="AS-01" required />
+                    <label for="AS-01">AS-01</label>
+                    <button class="preview-btn" type="button" data-img="{% static 'sheet_images/AS-01.png' %}">
+                        Preview
+                    </button>
+                </div>
+                <div class="template-card">
+                    <input type="radio" id="AS-02" name="sheet_template" value="AS-02" />
+                    <label for="AS-02">AS-02</label>
+                    <button class="preview-btn" type="button" data-img="{% static 'sheet_images/AS-02.png' %}">
+                        Preview
+                    </button>
+                </div>
+                <div class="template-card">
+                    <input type="radio" id="AS-03" name="sheet_template" value="AS-03" />
+                    <label for="AS-03">AS-03</label>
+                    <button class="preview-btn" type="button" data-img="{% static 'sheet_images/AS-03.png' %}">
+                        Preview
+                    </button>
+                </div>
+                <div class="template-card">
+                    <input type="radio" id="AS-04" name="sheet_template" value="AS-04" />
+                    <label for="AS-04">AS-04</label>
+                    <button class="preview-btn" type="button" data-img="{% static 'sheet_images/AS-04.png' %}">
+                        Preview
+                    </button>
+                </div>
+            </div>
+
+            <div class="preview-overlay" id="previewOverlay">
+                <span class="close-btn" id="closePreview">&times;</span>
+                <img id="previewImage" src="" alt="Template Preview" />
+            </div>
+
+            <div>
+                <div>
+                    <label for="exam-name">Exam Name</label>
+                    <input name="exam_name" type="text" id="exam-name" required />
+                </div>
+
+                <div>
+                    <label>Exam Instructions</label>
+                    <input
+                        name="instruction_1"
+                        maxlength="80"
+                        type="text"
+                        id="instruction_1"
+                        placeholder="1. Instruction"
+                    />
+                    <input
+                        name="instruction_2"
+                        maxlength="80"
+                        type="text"
+                        id="instruction_2"
+                        placeholder="2. Instruction"
+                    />
+                    <input
+                        name="instruction_3"
+                        maxlength="80"
+                        type="text"
+                        id="instruction_3"
+                        placeholder="3. Instruction"
+                    />
+                </div>
+
+                <div>
+                    <label for="exam-date">Exam Date</label>
+                    <input name="exam_date" type="date" id="exam-date" required />
+                </div>
+
+                <div>
+                    <label>Exam Time</label>
+                    <div>
+                        <label for="exam-hour">Hour</label>
+                        <input name="exam_hour" type="number" id="exam-hour" required />
+                        <label for="exam-min">Min</label>
+                        <input name="exam_min" type="number" id="exam-min" required />
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit">Generate Preview</button>
+        </form>
+
+        <button id="download-btn">Download Sheet (PDF)</button>
+
+        <script>
+            const previewButtons = document.querySelectorAll(".preview-btn");
+            const overlay = document.getElementById("previewOverlay");
+            const previewImage = document.getElementById("previewImage");
+            const closeBtn = document.getElementById("closePreview");
+
+            previewButtons.forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    const imgSrc = btn.getAttribute("data-img");
+                    previewImage.src = imgSrc;
+                    overlay.style.display = "flex";
+                });
+            });
+
+            closeBtn.addEventListener("click", () => {
+                overlay.style.display = "none";
+                previewImage.src = "";
+            });
+
+            overlay.addEventListener("click", (e) => {
+                if (e.target === overlay) {
+                    overlay.style.display = "none";
+                    previewImage.src = "";
+                }
+            });
+
+            // --- Default exam date ---
+            const today = new Date().toISOString().split("T")[0];
+            document.getElementById("dateInput").value = today;
+        </script>
+    </body>
+</html>

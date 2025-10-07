@@ -227,3 +227,32 @@ def submit_mark(request):
         return JsonResponse({"success": True})
 
     return JsonResponse({"success": False, "error": "Invalid request"})
+
+
+
+@csrf_protect
+def sheet_edit(request):
+    if request.method == "POST":
+        template = request.POST.get("sheet_template")
+        exam_name = request.POST.get("exam_name")
+        instr1 = request.POST.get("instruction_1")
+        instr2 = request.POST.get("instruction_2")
+        instr3 = request.POST.get("instruction_3")
+        exam_date = request.POST.get("exam_date")
+        exam_hour = request.POST.get("exam_hour")
+        exam_min = request.POST.get("exam_min")
+
+        context = {
+            "template": template,
+            "exam_name": exam_name,
+            "instructions": [instr1, instr2, instr3],
+            "exam_date": exam_date,
+            "exam_time": f"{exam_hour}:{exam_min}",
+        }
+
+        #! TODO: Edit the template with the given values.
+
+        return render(request, "sheet_edit.html", context)
+
+    return render(request, "sheet_edit.html")
+
