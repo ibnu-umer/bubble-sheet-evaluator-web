@@ -132,35 +132,16 @@
             {% csrf_token %}
 
             <h2>Select a Sheet Template</h2>
-            <div class="template-options">
+            <div class="template-options mb-6">
+                {% for t in templates %}
                 <div class="template-card">
-                    <input type="radio" id="AS-01" name="sheet_template" value="AS-01" required />
-                    <label for="AS-01">AS-01</label>
-                    <button class="preview-btn" type="button" data-img="{% static 'sheet_images/AS-01.png' %}">
+                    <input type="radio" id="{{ t }}" name="sheet_template" value="{{ t }}" required />
+                    <label for="{{ t }}">{{ t }}</label>
+                    <button class="preview-btn" type="button" data-img="{% static 'sheet_images/' %}{{ t }}.png">
                         Preview
                     </button>
                 </div>
-                <div class="template-card">
-                    <input type="radio" id="AS-02" name="sheet_template" value="AS-02" />
-                    <label for="AS-02">AS-02</label>
-                    <button class="preview-btn" type="button" data-img="{% static 'sheet_images/AS-02.png' %}">
-                        Preview
-                    </button>
-                </div>
-                <div class="template-card">
-                    <input type="radio" id="AS-03" name="sheet_template" value="AS-03" />
-                    <label for="AS-03">AS-03</label>
-                    <button class="preview-btn" type="button" data-img="{% static 'sheet_images/AS-03.png' %}">
-                        Preview
-                    </button>
-                </div>
-                <div class="template-card">
-                    <input type="radio" id="AS-04" name="sheet_template" value="AS-04" />
-                    <label for="AS-04">AS-04</label>
-                    <button class="preview-btn" type="button" data-img="{% static 'sheet_images/AS-04.png' %}">
-                        Preview
-                    </button>
-                </div>
+                {% endfor %}
             </div>
 
             <div class="preview-overlay" id="previewOverlay">

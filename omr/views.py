@@ -65,9 +65,13 @@ def evaluator(request):
     else:
         form = UploadForm()
 
-    recent = UploadLog.objects.order_by('-uploaded_at')[:20]
-    exams = request.user.exams.all().order_by('-exam_date')
-    return render(request, 'evaluate.html', {'form': form, 'recent': recent, 'exams': exams})
+    context = {
+        'form': form,
+        'recent': UploadLog.objects.order_by('-uploaded_at')[:20],
+        'exams': request.user.exams.all().order_by('-exam_date'),
+        'templates': list(TEMPLATE_CONFIG.keys())
+    }
+    return render(request, 'evaluate.html', context)
 
 
 
@@ -258,5 +262,6 @@ def sheet_edit(request):
         response["Content-Disposition"] = f'attachment; filename="{get_exam_folder_name(exam_name)}_sheet.pdf"'
         return response
 
-    return render(request, "sheet_edit.html")
+    templates = list(TEMPLATE_CONFIG.keys())
+    return render(request, "sheet_edit.html", {"templates": templates})
 
