@@ -88,3 +88,17 @@ def edit_answer_sheet(template_path=None, context=None):
     doc.close()
     return output
 
+
+def download_sheet_template(template_path=None, tempalte=None):
+    doc = fitz.open(template_path)
+    page_index = int(tempalte[-1]) - 1
+
+    new_doc = fitz.open()  # empty PDF
+    new_doc.insert_pdf(doc, from_page=page_index, to_page=page_index)
+
+    output = io.BytesIO()
+    new_doc.save(output)
+    output.seek(0)
+    new_doc.close()
+    doc.close()
+    return output

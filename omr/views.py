@@ -3,7 +3,7 @@ from django.contrib import messages
 from .forms import UploadForm
 from .models import UploadLog
 from django.conf import settings
-from .processing.pdf_utils import pdf_to_images, create_cover_page, edit_answer_sheet
+from .processing.pdf_utils import pdf_to_images, create_cover_page, edit_answer_sheet, download_sheet_template
 from .processing.evaluator import process_sheet, load_answers, get_exam_folder_name
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth.decorators import login_required
@@ -247,6 +247,7 @@ def sheet_edit(request):
         exam_date = datetime.strptime(request.POST.get("exam_date"), "%Y-%m-%d").strftime("%d-%m-%Y")
         exam_hour = request.POST.get("exam_hour")
         exam_min = request.POST.get("exam_min")
+        template_path = os.path.join(settings.STATIC_ROOT, f"answer_sheet_template.pdf")
 
         context = {
             "template": template,
@@ -256,7 +257,13 @@ def sheet_edit(request):
             "exam_time": f"{exam_hour}h {exam_min}m ",
         }
 
-        template_path = os.path.join(settings.STATIC_ROOT, f"answer_sheet_template.pdf")
+        if "download-template" in request.POST or request.headers.get("X-Requested-With") != "XMLHttpRequest":
+            output = download_sheet_template(template_path, template)
+            response = HttpResponse(output.read(), content_type="application/pdf")
+            response["Content-Disposition"] = f'attachment; filename="{exam_name}_sheet.pdf"'
+            return response
+
+
         output = edit_answer_sheet(template_path, context)
 
         # Store PDF bytes in session for later download
