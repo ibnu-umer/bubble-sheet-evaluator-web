@@ -5,6 +5,7 @@ from pdf2image import convert_from_bytes
 from PIL import Image
 from .qr_utils import extract_qr_data
 from PIL import Image, ImageDraw, ImageFont
+import fitz, io
 
 
 
@@ -50,4 +51,40 @@ def create_cover_page(exam_name):
     x = (width - text_width) / 2
     y = (height - text_height) / 2
     draw.text((x, y), exam_name, fill="black", font=font)
-    return cover 
+    return cover
+
+
+
+def edit_answer_sheet(template_path=None, context=None):
+    doc = fitz.open(template_path)
+    page_index = int(context['template'][-1])
+
+    new_doc = fitz.open()  # empty PDF
+    new_doc.insert_pdf(doc, from_page=page_index, to_page=page_index)
+    page = new_doc[0]
+
+    header_text = context['exam_name'].upper()
+    header_font, header_size = "times-bold", 16
+    secondary_font = "helv"
+    text_length = fitz.get_text_length(header_text, fontname=header_font, fontsize=header_size)
+    page_width = page.rect.width
+    x, y = ((page_width - text_length) / 2), 80
+
+    # Define positions (x, y) based on where you want the text to appear
+    page.insert_text((x, y), header_text, fontsize=header_size, fontname=header_font, color=(0, 0, 0))
+    page.insert_text((35, 105), "Instructions", fontname=header_font, fontsize=12),
+    page.insert_text((45, 120), f"1. {context['instructions'][0]}", fontname=secondary_font, fontsize=11)
+    page.insert_text((45, 135), f"2. {context['instructions'][1]}", fontname=secondary_font, fontsize=11)
+    page.insert_text((45, 150), f"3. {context['instructions'][2]}", fontname=secondary_font, fontsize=11)
+
+    page.insert_text((510, 140), f"Date: {context['exam_date']}", fontsize=8)
+    page.insert_text((510, 150), f"Time: {context['exam_time']}", fontsize=8)
+
+    # Return PDF as response
+    output = io.BytesIO()
+    new_doc.save(output)
+    output.seek(0)
+    new_doc.close()
+    doc.close()
+    return output
+

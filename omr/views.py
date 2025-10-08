@@ -3,12 +3,12 @@ from django.contrib import messages
 from .forms import UploadForm
 from .models import UploadLog
 from django.conf import settings
-from .processing.pdf_utils import pdf_to_images, create_cover_page
+from .processing.pdf_utils import pdf_to_images, create_cover_page, edit_answer_sheet
 from .processing.evaluator import process_sheet, load_answers, get_exam_folder_name
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth.decorators import login_required
 from .constants import *
-import os
+import os, fitz
 from django.http import StreamingHttpResponse, JsonResponse, HttpResponse
 import json
 from django.core.cache import cache
@@ -24,6 +24,7 @@ from reportlab.pdfgen import canvas
 import cv2
 from django.shortcuts import get_object_or_404
 from django.core.files.base import ContentFile
+from datetime import datetime
 
 
 
@@ -238,7 +239,7 @@ def sheet_edit(request):
         instr1 = request.POST.get("instruction_1")
         instr2 = request.POST.get("instruction_2")
         instr3 = request.POST.get("instruction_3")
-        exam_date = request.POST.get("exam_date")
+        exam_date = datetime.strptime(request.POST.get("exam_date"), "%Y-%m-%d").strftime("%d-%m-%Y")
         exam_hour = request.POST.get("exam_hour")
         exam_min = request.POST.get("exam_min")
 
@@ -247,12 +248,15 @@ def sheet_edit(request):
             "exam_name": exam_name,
             "instructions": [instr1, instr2, instr3],
             "exam_date": exam_date,
-            "exam_time": f"{exam_hour}:{exam_min}",
+            "exam_time": f"{exam_hour}h {exam_min}m ",
         }
 
         #! TODO: Edit the template with the given values.
-
-        return render(request, "sheet_edit.html", context)
+        template_path = os.path.join(settings.STATIC_ROOT, f"answer_sheet_template.pdf")
+        output = edit_answer_sheet(template_path, context)
+        response = HttpResponse(output.read(), content_type="application/pdf")
+        response["Content-Disposition"] = f'attachment; filename="{get_exam_folder_name(exam_name)}_sheet.pdf"'
+        return response
 
     return render(request, "sheet_edit.html")
 
