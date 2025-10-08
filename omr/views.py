@@ -25,6 +25,7 @@ import cv2
 from django.shortcuts import get_object_or_404
 from django.core.files.base import ContentFile
 from datetime import datetime
+import base64
 
 
 
@@ -255,13 +256,33 @@ def sheet_edit(request):
             "exam_time": f"{exam_hour}h {exam_min}m ",
         }
 
-        #! TODO: Edit the template with the given values.
         template_path = os.path.join(settings.STATIC_ROOT, f"answer_sheet_template.pdf")
         output = edit_answer_sheet(template_path, context)
-        response = HttpResponse(output.read(), content_type="application/pdf")
-        response["Content-Disposition"] = f'attachment; filename="{get_exam_folder_name(exam_name)}_sheet.pdf"'
-        return response
+
+        # Store PDF bytes in session for later download
+        request.session["last_generated_pdf"] = base64.b64encode(output.getvalue()).decode("utf-8")
+        request.session["last_exam_name"] = exam_name
+
+        page = fitz.open("pdf", output.getvalue())[0]
+        pix = page.get_pixmap(dpi=150)
+        img_base64 = base64.b64encode(pix.tobytes("png")).decode("utf-8")
+
+        return JsonResponse({"image_data": img_base64})
 
     templates = list(TEMPLATE_CONFIG.keys())
     return render(request, "sheet_edit.html", {"templates": templates})
 
+
+
+def sheet_download(request):
+    """Serves the last generated PDF for download"""
+    pdf_data = request.session.get("last_generated_pdf")
+    exam_name = request.session.get("last_exam_name", "exam")
+
+    if not pdf_data:
+        return HttpResponse("No PDF found. Please generate a preview first.", status=404)
+
+    pdf_bytes = base64.b64decode(pdf_data)
+    response = HttpResponse(pdf_bytes, content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="{get_exam_folder_name(exam_name)}_sheet.pdf"'
+    return response

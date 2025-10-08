@@ -5,8 +5,6 @@
         <meta charset="UTF-8" />
         <title>Create Answer Sheet</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" />
-        <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
         <style>
             input {
                 border: 1px solid black;
@@ -48,7 +46,7 @@
 
             /* Overlay modal */
             .preview-overlay {
-                display: none; /* hidden by default */
+                display: none;
                 position: fixed;
                 top: 0;
                 left: 0;
@@ -59,11 +57,14 @@
                 align-items: center;
                 z-index: 1000;
             }
-            .preview-overlay img {
+            .preview-overlay img,
+            .preview-overlay embed {
                 max-width: 90%;
                 max-height: 90%;
                 border-radius: 10px;
                 box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+                background: white;
+                object-fit: contain;
             }
             .close-btn {
                 position: absolute;
@@ -76,10 +77,11 @@
             }
         </style>
     </head>
-    <body>
-        <h1>Create Answer Sheet</h1>
 
-        <form method="post" enctype="multipart/form-data" id="create-sheet" action="{% url 'sheet_edit' %}">
+    <body class="p-8">
+        <h1 class="text-2xl font-bold mb-4">Create Answer Sheet</h1>
+
+        <form method="post" enctype="multipart/form-data" id="sheet-form" action="{% url 'sheet_edit' %}">
             {% csrf_token %}
 
             <h2>Select a Sheet Template</h2>
@@ -95,92 +97,142 @@
                 {% endfor %}
             </div>
 
-            <div class="preview-overlay" id="previewOverlay">
-                <span class="close-btn" id="closePreview">&times;</span>
-                <img id="previewImage" src="" alt="Template Preview" />
+            <!-- ✅ Template Preview Overlay -->
+            <div class="preview-overlay" id="templateOverlay">
+                <span class="close-btn" id="closeTemplatePreview">&times;</span>
+                <img id="templatePreviewImage" src="" alt="Template Preview" />
             </div>
 
-            <div>
+            <!-- --- Exam Info --- -->
+            <div class="space-y-4">
                 <div>
                     <label for="exam-name">Exam Name</label>
-                    <input name="exam_name" type="text" id="exam-name" required />
+                    <input name="exam_name" type="text" id="exam-name" class="w-full p-1" required />
                 </div>
 
                 <div>
                     <label>Exam Instructions</label>
-                    <input
-                        name="instruction_1"
-                        maxlength="80"
-                        type="text"
-                        id="instruction_1"
-                        placeholder="1. Instruction"
-                    />
-                    <input
-                        name="instruction_2"
-                        maxlength="80"
-                        type="text"
-                        id="instruction_2"
-                        placeholder="2. Instruction"
-                    />
-                    <input
-                        name="instruction_3"
-                        maxlength="80"
-                        type="text"
-                        id="instruction_3"
-                        placeholder="3. Instruction"
-                    />
+                    <div class="space-y-1">
+                        <input
+                            name="instruction_1"
+                            maxlength="80"
+                            type="text"
+                            id="instruction_1"
+                            placeholder="1. Instruction"
+                            class="w-full p-1"
+                        />
+                        <input
+                            name="instruction_2"
+                            maxlength="80"
+                            type="text"
+                            id="instruction_2"
+                            placeholder="2. Instruction"
+                            class="w-full p-1"
+                        />
+                        <input
+                            name="instruction_3"
+                            maxlength="80"
+                            type="text"
+                            id="instruction_3"
+                            placeholder="3. Instruction"
+                            class="w-full p-1"
+                        />
+                    </div>
                 </div>
 
                 <div>
                     <label for="exam-date">Exam Date</label>
-                    <input name="exam_date" type="date" id="exam-date" required />
+                    <input name="exam_date" type="date" id="exam-date" class="w-full p-1" required />
                 </div>
 
                 <div>
                     <label>Exam Time</label>
                     <div>
                         <label for="exam-hour">Hour</label>
-                        <input name="exam_hour" type="number" id="exam-hour" required />
+                        <input name="exam_hour" type="number" id="exam-hour" required min="0" max="23" />
                         <label for="exam-min">Min</label>
-                        <input name="exam_min" type="number" id="exam-min" required />
+                        <input name="exam_min" type="number" id="exam-min" required min="0" max="59" />
                     </div>
                 </div>
             </div>
 
-            <button type="submit">Generate Preview</button>
+            <button type="submit" class="mt-4 px-4 py-2 bg-green-600 text-white rounded">Generate Preview</button>
         </form>
 
-        <button id="download-btn">Download Sheet (PDF)</button>
+        <!-- ✅ Sheet Preview Overlay (for generated sheet) -->
+        <div class="preview-overlay" id="sheetOverlay">
+            <span class="close-btn" id="closeSheetPreview">&times;</span>
+            <embed id="sheetPreview" type="application/pdf" width="80%" height="90%" />
+        </div>
+
+        <button id="download-btn" class="mt-6 px-4 py-2 bg-blue-600 text-white rounded">Download Sheet (PDF)</button>
 
         <script>
-            const previewButtons = document.querySelectorAll(".preview-btn");
-            const overlay = document.getElementById("previewOverlay");
-            const previewImage = document.getElementById("previewImage");
-            const closeBtn = document.getElementById("closePreview");
+            // --- Template preview overlay ---
+            const templateOverlay = document.getElementById("templateOverlay");
+            const templatePreviewImage = document.getElementById("templatePreviewImage");
+            const closeTemplatePreview = document.getElementById("closeTemplatePreview");
 
-            previewButtons.forEach((btn) => {
+            document.querySelectorAll(".preview-btn").forEach((btn) => {
                 btn.addEventListener("click", () => {
-                    const imgSrc = btn.getAttribute("data-img");
-                    previewImage.src = imgSrc;
-                    overlay.style.display = "flex";
+                    templatePreviewImage.src = btn.dataset.img;
+                    templateOverlay.style.display = "flex";
                 });
             });
 
-            closeBtn.addEventListener("click", () => {
-                overlay.style.display = "none";
-                previewImage.src = "";
+            closeTemplatePreview.addEventListener("click", () => {
+                templateOverlay.style.display = "none";
+                templatePreviewImage.src = "";
             });
 
-            overlay.addEventListener("click", (e) => {
-                if (e.target === overlay) {
-                    overlay.style.display = "none";
-                    previewImage.src = "";
+            templateOverlay.addEventListener("click", (e) => {
+                if (e.target === templateOverlay) {
+                    templateOverlay.style.display = "none";
+                    templatePreviewImage.src = "";
                 }
             });
 
             // --- Default exam date ---
             const today = new Date().toISOString().split("T")[0];
-            document.getElementById("dateInput").value = today;
+            document.getElementById("exam-date").value = today;
+
+
+            // --- Generated sheet preview overlay ---
+            const form = document.querySelector("form");
+            const overlay = document.getElementById("sheetOverlay");
+            const preview = document.getElementById("sheetPreview");
+            const closeBtn = document.getElementById("closeSheetPreview");
+            const downloadBtn = document.getElementById("download-btn");
+
+            // Generate Preview
+            form.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const res = await fetch("", { method: "POST", body: formData });
+                const data = await res.json();
+
+                // show overlay with image
+                const imgSrc = "data:image/png;base64," + data.image_data;
+                preview.src = imgSrc;
+                overlay.style.display = "flex";
+            });
+
+            // Close preview overlay
+            closeBtn.addEventListener("click", () => {
+                overlay.style.display = "none";
+                preview.src = "";
+            });
+            overlay.addEventListener("click", (e) => {
+                if (e.target === overlay) {
+                    overlay.style.display = "none";
+                    preview.src = "";
+                }
+            });
+
+            // Download last generated sheet
+            downloadBtn.addEventListener("click", () => {
+                window.location.href = "{% url 'sheet_download' %}";
+            });
         </script>
     </body>
 </html>
