@@ -3,49 +3,31 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <title>{% block title %}OMR App{% endblock %}</title>
-        <style>
-            .signup-container {
-                max-width: 400px;
-                margin: 40px auto;
-                padding: 2rem;
-                border: 1px solid #ddd;
-                border-radius: 8px;
-                background: #fff;
-            }
-            .signup-container h2 {
-                text-align: center;
-                margin-bottom: 1rem;
-            }
-            button {
-                width: 100%;
-                padding: 0.7rem;
-                background: #16a34a;
-                color: #fff;
-                border: none;
-                border-radius: 4px;
-                font-weight: bold;
-                cursor: pointer;
-            }
-            button:hover {
-                background: #15803d;
-            }
-        </style>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Sign Up | OMR App</title>
+        <link rel="stylesheet" href="{% static 'css/signup.css' %}" />
     </head>
     <body>
-        <div class="signup-container">
-            <h2>Create Account</h2>
+        <div class="signup-page">
+            <div class="signup-card">
+                <h1 class="signup-title">Create Your Account</h1>
+                <p class="signup-subtitle">Join OMR Evaluator and get started!</p>
 
-            <form method="post">
-                {% csrf_token %} {{ form.as_p }}
-                <button type="submit">Sign up</button>
-            </form>
+                {% if form.errors %}
+                <p class="error-msg">Please fix the highlighted errors below.</p>
+                {% endif %}
 
-            <p>
-                Already have an account?
-                <a href="{% url 'login' %}">Login here</a>
-                .
-            </p>
+                <form method="post" class="signup-form">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit" class="signup-btn">Sign Up</button>
+                </form>
+
+                <p class="login-text">
+                    Already have an account?
+                    <a href="{% url 'login' %}">Login here</a>
+                </p>
+            </div>
         </div>
     </body>
 </html>
