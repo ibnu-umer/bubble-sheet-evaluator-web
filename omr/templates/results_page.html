@@ -1,31 +1,44 @@
-{% extends 'base.html' %} {% block title %}OMR Evaluator{% endblock %}
+{% extends 'base.html' %}
 {% load static %}
+{% block title %}Results | OMR Evaluator{% endblock %}
+
 {% block content %}
+<section class="page-section results-list">
+    <header class="section-header">
+        <h1 class="section-title">Results</h1>
+    </header>
 
-<h2>Results</h2>
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Date</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for exam in exams %}
-        <tr>
-            <td>{{ exam.exam_name }}</td>
-            <td>{{ exam.exam_date }}</td>
-            <td>
-                <a href="{% url 'results' exam.exam_id %}">
-                    <button type="button">Show result</button>
-                </a>
-            </td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="4">No exams yet.</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
+    <div class="table-wrapper">
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th>Exam Name</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for exam in exams %}
+                <tr>
+                    <td class="exam-name">{{ exam.exam_name }}</td>
+                    <td class="exam-date">{{ exam.exam_date|date:"d M Y" }}</td>
+                    <td class="table-actions">
+                        <a href="{% url 'results' exam.exam_id %}">
+                            <button type="button" class="btn btn-view">Show Result</button>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="no-data">No exams yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
 
+{% block styles %}
+<link rel="stylesheet" href="{% static 'css/results_page.css' %}">
 {% endblock %}
