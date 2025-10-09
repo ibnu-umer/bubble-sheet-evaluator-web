@@ -1,104 +1,152 @@
-{% extends 'base.html' %} {% block title %}OMR Evaluator{% endblock %}
+{% extends 'base.html' %}
 {% load static %}
+{% block title %}Create Answer Sheet{% endblock %}
+
+
 {% block content %}
+<section class="page-section create-sheet">
+    <header class="section-header">
+        <h1 class="section-title">Create Answer Sheet</h1>
+    </header>
 
-<h1>Create Answer Sheet</h1>
+    <form
+        method="post"
+        enctype="multipart/form-data"
+        id="sheet-form"
+        class="create-sheet__form"
+        action="{% url 'create_sheet' %}"
+    >
+        {% csrf_token %}
 
-<form method="post" enctype="multipart/form-data" id="sheet-form" action="{% url 'create_sheet' %}">
-    {% csrf_token %}
+        <!-- Template Selection -->
+        <div class="form-section">
+            <h2 class="form-section__title">Select a Sheet Template</h2>
+            <div class="template-grid">
+                {% for t in templates %}
+                <div class="template-card">
+                    <input
+                        type="radio"
+                        id="{{ t }}"
+                        name="sheet_template"
+                        value="{{ t }}"
+                        required
+                        class="template-card__radio"
+                    />
+                    <label for="{{ t }}" class="template-card__label">{{ t }}</label>
 
-    <h2>Select a Sheet Template</h2>
-    <div class="template-options mb-6">
-        {% for t in templates %}
-        <div class="template-card">
-            <input type="radio" id="{{ t }}" name="sheet_template" value="{{ t }}" required />
-            <label for="{{ t }}">{{ t }}</label>
-            <button class="preview-btn" type="button" data-img="{% static 'sheet_images/' %}{{ t }}.png">
-                Preview
-            </button>
-            <button
-                class="download-template-btn bg-green-600 text-white px-3 py-1 rounded"
-                type="button"
-                data-template="{{ t }}"
-            >
-                Download
-            </button>
-        </div>
-        {% endfor %}
-    </div>
+                    <div class="template-card__actions">
+                        <button
+                            class="btn btn--secondary preview-btn"
+                            type="button"
+                            data-img="{% static 'sheet_images/' %}{{ t }}.png"
+                        >
+                            Preview
+                        </button>
 
-    <!-- ✅ Template Preview Overlay -->
-    <div class="preview-overlay" id="templateOverlay">
-        <span class="close-btn" id="closeTemplatePreview">&times;</span>
-        <img id="templatePreviewImage" src="" alt="Template Preview" />
-    </div>
-
-    <!-- --- Exam Info --- -->
-    <div class="space-y-4">
-        <div>
-            <label for="exam-name">Exam Name</label>
-            <input name="exam_name" type="text" id="exam-name" class="w-full p-1" required />
-        </div>
-
-        <div>
-            <label>Exam Instructions</label>
-            <div class="space-y-1">
-                <input
-                    name="instruction_1"
-                    maxlength="80"
-                    type="text"
-                    id="instruction_1"
-                    placeholder="1. Instruction"
-                    class="w-full p-1"
-                />
-                <input
-                    name="instruction_2"
-                    maxlength="80"
-                    type="text"
-                    id="instruction_2"
-                    placeholder="2. Instruction"
-                    class="w-full p-1"
-                />
-                <input
-                    name="instruction_3"
-                    maxlength="80"
-                    type="text"
-                    id="instruction_3"
-                    placeholder="3. Instruction"
-                    class="w-full p-1"
-                />
+                        <button class="btn btn--success download-template-btn" type="button" data-template="{{ t }}">
+                            Download
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
         </div>
 
-        <div>
-            <label for="exam-date">Exam Date</label>
-            <input name="exam_date" type="date" id="exam-date" class="w-full p-1" required />
+        <!-- Preview Overlay for Template -->
+        <div class="preview-overlay" id="templateOverlay">
+            <span class="close-btn" id="closeTemplatePreview">&times;</span>
+            <img id="templatePreviewImage" src="" alt="Template Preview" />
         </div>
 
-        <div>
-            <label>Exam Time</label>
-            <div>
-                <label for="exam-hour">Hour</label>
-                <input name="exam_hour" type="number" id="exam-hour" required min="0" max="23" />
-                <label for="exam-min">Min</label>
-                <input name="exam_min" type="number" id="exam-min" required min="0" max="59" />
+        <!-- Exam Information -->
+        <div class="form-section">
+            <h2 class="form-section__title">Exam Information</h2>
+
+            <div class="form-group">
+                <label for="exam-name" class="form-label">Exam Name</label>
+                <input name="exam_name" type="text" id="exam-name" class="form-input" required />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Exam Instructions</label>
+                <div class="instruction-list">
+                    <input
+                        name="instruction_1"
+                        maxlength="80"
+                        type="text"
+                        id="instruction_1"
+                        placeholder="1. Instruction"
+                        class="form-input"
+                    />
+                    <input
+                        name="instruction_2"
+                        maxlength="80"
+                        type="text"
+                        id="instruction_2"
+                        placeholder="2. Instruction"
+                        class="form-input"
+                    />
+                    <input
+                        name="instruction_3"
+                        maxlength="80"
+                        type="text"
+                        id="instruction_3"
+                        placeholder="3. Instruction"
+                        class="form-input"
+                    />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="exam-date" class="form-label">Exam Date</label>
+                <input name="exam_date" type="date" id="exam-date" class="form-input" required />
+            </div>
+
+            <div class="form-group form-group--time">
+                <label class="form-label">Exam Time</label>
+                <div class="time-inputs">
+                    <label for="exam-hour">Hour</label>
+                    <input
+                        name="exam_hour"
+                        type="number"
+                        id="exam-hour"
+                        class="form-input--small"
+                        required
+                        min="0"
+                        max="23"
+                    />
+                    <label for="exam-min">Min</label>
+                    <input
+                        name="exam_min"
+                        type="number"
+                        id="exam-min"
+                        class="form-input--small"
+                        required
+                        min="0"
+                        max="59"
+                    />
+                </div>
             </div>
         </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <button type="submit" class="btn btn--primary">Generate Preview</button>
+            <button id="download-btn" class="btn btn--success">Download Sheet (PDF)</button>
+        </div>
+    </form>
+
+    <!-- Sheet Preview Overlay (for generated sheet) -->
+    <div class="preview-overlay" id="sheetOverlay">
+        <span class="close-btn" id="closeSheetPreview">&times;</span>
+        <embed id="sheetPreview" type="application/pdf" width="80%" height="90%" />
     </div>
-
-    <button type="submit" class="mt-4 px-4 py-2 bg-green-600 text-white rounded">Generate Preview</button>
-</form>
-
-<!-- Sheet Preview Overlay (for generated sheet) -->
-<div class="preview-overlay" id="sheetOverlay">
-    <span class="close-btn" id="closeSheetPreview">&times;</span>
-    <embed id="sheetPreview" type="application/pdf" width="80%" height="90%" />
-</div>
-
-<button id="download-btn" class="mt-6 px-4 py-2 bg-blue-600 text-white rounded">Download Sheet (PDF)</button>
-
+</section>
 {% endblock %}
 
+{% block styles %}
+<link rel="stylesheet" href="{% static 'css/create_sheet.css' %}" />
+{% endblock %}
 
 {% block scripts %}
 <script src="{% static 'js/create_sheet.js' %}"></script>
