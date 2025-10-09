@@ -1,387 +1,74 @@
+{% extends 'base.html' %} {% block title %}OMR Evaluator{% endblock %}
 {% load static %}
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8" />
-        <title>OMR Evaluation</title>
-        <style>
-            #progress-container {
-                width: 100%;
-                background: #eee;
-                border-radius: 5px;
-                margin: 20px 0;
-            }
-            #progress-bar {
-                width: 0;
-                height: 25px;
-                background: #4caf50;
-                text-align: center;
-                color: white;
-                border-radius: 5px;
-            }
-            #results {
-                margin-top: 20px;
-                display: none;
-            }
-            table,
-            th,
-            td {
-                border: 1px solid black;
-                border-collapse: collapse;
-                padding: 5px;
-            }
-            .template-options {
-                display: flex;
-                gap: 20px;
-                flex-wrap: wrap;
-            }
-            .template-card {
-                border: 2px solid #ccc;
-                border-radius: 10px;
-                padding: 15px;
-                width: 200px;
-                text-align: center;
-            }
-            .template-card input[type="radio"] {
-                margin-bottom: 8px;
-            }
-            .template-card label {
-                display: block;
-                margin-bottom: 10px;
-                font-weight: bold;
-            }
-            .preview-btn {
-                background-color: #007bff;
-                color: white;
-                border: none;
-                padding: 8px 12px;
-                border-radius: 6px;
-                cursor: pointer;
-            }
-            .preview-btn:hover {
-                background-color: #0056b3;
-            }
+{% block content %}
 
-            /* Overlay modal */
-            .preview-overlay {
-                display: none; /* hidden by default */
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.8);
-                justify-content: center;
-                align-items: center;
-                z-index: 1000;
-            }
-            .preview-overlay img {
-                max-width: 90%;
-                max-height: 90%;
-                border-radius: 10px;
-                box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
-            }
-            .close-btn {
-                position: absolute;
-                top: 20px;
-                right: 30px;
-                font-size: 30px;
-                font-weight: bold;
-                color: white;
-                cursor: pointer;
-            }
-        </style>
-    </head>
-    <body>
-        <h1>OMR Evaluation</h1>
+<h1>OMR Evaluation</h1>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Date</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for exam in exams %}
-                <tr>
-                    <td>{{ exam.exam_name }}</td>
-                    <td>{{ exam.exam_date }}</td>
-                    <td>
-                        <a href="{% url 'results_page' exam.exam_id %}">
-                            <button type="button">Show result</button>
-                        </a>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="4">No exams yet.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
+{% if messages %}
+<ul>
+    {% for m in messages %}
+    <li>{{ m }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
 
-        {% if messages %}
-        <ul>
-            {% for m in messages %}
-            <li>{{ m }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
+<form method="post" enctype="multipart/form-data" id="process-form" action="{% url 'evaluator' %}">
+    {% csrf_token %}
 
-        <form method="post" enctype="multipart/form-data" id="process-form" action="{% url 'evaluator' %}">
-            {% csrf_token %}
-
-            <h2>Select a Sheet Template</h2>
-            <div class="template-options mb-6">
-                {% for t in templates %}
-                <div class="template-card">
-                    <input type="radio" id="{{ t }}" name="sheet_template" value="{{ t }}" required />
-                    <label for="{{ t }}">{{ t }}</label>
-                    <button class="preview-btn" type="button" data-img="{% static 'sheet_images/' %}{{ t }}.png">
-                        Preview
-                    </button>
-                </div>
-                {% endfor %}
-            </div>
-
-            <div class="preview-overlay" id="previewOverlay">
-                <span class="close-btn" id="closePreview">&times;</span>
-                <img id="previewImage" src="" alt="Template Preview" />
-            </div>
-
-            <h3>Exam Date</h3>
-            <input for="exam-date" name="exam_date" type="date" id="dateInput" />
-
-            <h3>Exam Name</h3>
-            <input for="exam-name" name="exam_name" type="text" required />
-
-            <h3>College/School Name</h3>
-            <input for="org-name" name="org_name" type="text" required />
-
-            <h3>Subject</h3>
-            <input for="subject" name="subject" type="text" required />
-
-            <h3>Pass Mark</h3>
-            <input for="pass-mark" name="pass_mark" type="number" required />
-
-            <!-- Upload Section -->
-            <h3>Upload Files</h3>
-            <div>
-                <label for="sheet_upload">Upload Sheet PDFs:</label>
-                <input type="file" name="sheet_files" id="sheet_upload" accept=".pdf" multiple required />
-                <ul id="sheetList"></ul>
-            </div>
-
-            <div>
-                <label for="answer_upload">Upload Answer Key (CSV/JSON):</label>
-                <input type="file" name="answer_file" id="answer_upload" accept=".csv,.json" required />
-                <ul id="answerList"></ul>
-            </div>
-
-            <button type="submit" id="process-button">Start Processing</button>
-        </form>
-
-        <h1>Processing Sheets</h1>
-        <div id="progress-container">
-            <div id="progress-bar">0%</div>
+    <h2>Select a Sheet Template</h2>
+    <div class="template-options mb-6">
+        {% for t in templates %}
+        <div class="template-card">
+            <input type="radio" id="{{ t }}" name="sheet_template" value="{{ t }}" required />
+            <label for="{{ t }}">{{ t }}</label>
+            <button class="preview-btn" type="button" data-img="{% static 'sheet_images/' %}{{ t }}.png">
+                Preview
+            </button>
         </div>
+        {% endfor %}
+    </div>
 
-        <div id="results" style="display: none"></div>
+    <div class="preview-overlay" id="previewOverlay">
+        <span class="close-btn" id="closePreview">&times;</span>
+        <img id="previewImage" src="" alt="Template Preview" />
+    </div>
 
-        <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                // For multiple sheet files
-                function handleMultiFileList(input, listId) {
-                    const list = document.getElementById(listId);
-                    list.innerHTML = "";
+    <h3>Exam Date</h3>
+    <input for="exam-date" name="exam_date" type="date" id="dateInput" />
 
-                    Array.from(input.files).forEach((file, index) => {
-                        const li = document.createElement("li");
-                        li.textContent = file.name + " ";
+    <h3>Exam Name</h3>
+    <input for="exam-name" name="exam_name" type="text" required />
 
-                        const removeBtn = document.createElement("span");
-                        removeBtn.textContent = "✖";
-                        removeBtn.style.cursor = "pointer";
-                        removeBtn.style.color = "red";
-                        removeBtn.onclick = function () {
-                            const dt = new DataTransfer();
-                            Array.from(input.files)
-                                .filter((_, i) => i !== index)
-                                .forEach((f) => dt.items.add(f));
-                            input.files = dt.files;
-                            handleMultiFileList(input, listId);
-                        };
+    <h3>College/School Name</h3>
+    <input for="org-name" name="org_name" type="text" required />
 
-                        li.appendChild(removeBtn);
-                        list.appendChild(li);
-                    });
-                }
+    <h3>Subject</h3>
+    <input for="subject" name="subject" type="text" required />
 
-                // For single answer file
-                function handleSingleFile(input, listId) {
-                    const list = document.getElementById(listId);
-                    list.innerHTML = "";
+    <h3>Pass Mark</h3>
+    <input for="pass-mark" name="pass_mark" type="number" required />
 
-                    if (input.files.length > 0) {
-                        const file = input.files[0];
-                        const li = document.createElement("li");
-                        li.textContent = file.name + " ";
+    <!-- Upload Section -->
+    <h3>Upload Files</h3>
+    <div>
+        <label for="sheet_upload">Upload Sheet PDFs:</label>
+        <input type="file" name="sheet_files" id="sheet_upload" accept=".pdf" multiple required />
+        <ul id="sheetList"></ul>
+    </div>
 
-                        const removeBtn = document.createElement("span");
-                        removeBtn.textContent = "✖";
-                        removeBtn.style.cursor = "pointer";
-                        removeBtn.style.color = "red";
-                        removeBtn.onclick = function () {
-                            input.value = ""; // reset file input
-                            list.innerHTML = "";
-                        };
+    <div>
+        <label for="answer_upload">Upload Answer Key (CSV/JSON):</label>
+        <input type="file" name="answer_file" id="answer_upload" accept=".csv,.json" required />
+        <ul id="answerList"></ul>
+    </div>
 
-                        li.appendChild(removeBtn);
-                        list.appendChild(li);
-                    }
-                }
+    <button type="submit" id="process-button">Start Processing</button>
+</form>
 
-                document.getElementById("sheet_upload").addEventListener("change", function () {
-                    handleMultiFileList(this, "sheetList");
-                });
+<h1>Processing Sheets</h1>
+<div id="progress-container">
+    <div id="progress-bar">0%</div>
+</div>
 
-                document.getElementById("answer_upload").addEventListener("change", function () {
-                    handleSingleFile(this, "answerList");
-                });
-            });
-
-
-            const processButton = document.getElementById("process-button");
-            document.getElementById("process-form").addEventListener("submit", async function (event) {
-                event.preventDefault(); // stop normal submit
-
-                // submit button ux
-                processButton.disabled = true;
-                processButton.textContent = "Processing...";
-
-                const form = document.getElementById("process-form");
-                const formData = new FormData();
-
-                // Add regular inputs (text/date/radio etc.)
-                new FormData(form).forEach((value, key) => {
-                    if (key !== "sheet_files" && key !== "answer_file") {
-                        formData.append(key, value);
-                    }
-                });
-
-                // Add multiple sheet files
-                const sheetInput = document.getElementById("sheet_upload");
-                Array.from(sheetInput.files).forEach((file) => {
-                    formData.append("sheet_files", file);
-                });
-
-                // Add single answer file
-                const answerInput = document.getElementById("answer_upload");
-                if (answerInput.files.length > 0) {
-                    formData.append("answer_file", answerInput.files[0]);
-                }
-
-                // Send request
-                const response = await fetch("{% url 'process_ajax' %}", {
-                    method: "POST",
-                    headers: {
-                        "X-CSRFToken": "{{ csrf_token }}",
-                    },
-                    body: formData,
-                });
-
-                // --- Streaming response handling ---
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let buffer = "";
-
-                function handleData(data) {
-                    // progress bar
-                    if (data.progress !== undefined) {
-                        const bar = document.getElementById("progress-bar");
-                        if (bar) {
-                            bar.style.width = data.progress + "%";
-                            bar.innerText = data.progress + "%";
-                        }
-                    }
-
-                    // results
-                    if (data.exam_id) {
-                        const resultsDiv = document.getElementById("results");
-                        if (resultsDiv) {
-                            resultsDiv.style.display = "block";
-                            resultsDiv.innerHTML = `
-                                <p>Processing completed successfully!</p>
-                                <a href="/results/${data.exam_id}/" class="btn btn-primary">
-                                    View Results
-                                </a>
-                            `;
-                        }
-                    }
-                    console.log("Chunk received:", data);
-                }
-
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-
-                    buffer += decoder.decode(value, { stream: true });
-                    let parts = buffer.split("\n");
-                    buffer = parts.pop();
-
-                    for (let part of parts) {
-                        if (!part.trim()) continue;
-                        try {
-                            const data = JSON.parse(part);
-                            handleData(data);
-                        } catch (e) {
-                            console.error("Failed to parse chunk:", part, e);
-                        }
-                    }
-                }
-
-                if (buffer.trim()) {
-                    try {
-                        const data = JSON.parse(buffer);
-                        handleData(data);
-                    } catch (e) {
-                        console.error("Failed to parse leftover:", buffer, e);
-                    }
-                }
-
-                processButton.disabled = false;
-                processButton.textContent = "Process Sheets";
-            });
-
-            // --- Preview handling ---
-            const previewButtons = document.querySelectorAll(".preview-btn");
-            const overlay = document.getElementById("previewOverlay");
-            const previewImage = document.getElementById("previewImage");
-            const closeBtn = document.getElementById("closePreview");
-
-            previewButtons.forEach((btn) => {
-                btn.addEventListener("click", () => {
-                    const imgSrc = btn.getAttribute("data-img");
-                    previewImage.src = imgSrc;
-                    overlay.style.display = "flex";
-                });
-            });
-
-            closeBtn.addEventListener("click", () => {
-                overlay.style.display = "none";
-                previewImage.src = "";
-            });
-
-            overlay.addEventListener("click", (e) => {
-                if (e.target === overlay) {
-                    overlay.style.display = "none";
-                    previewImage.src = "";
-                }
-            });
-
-            // --- Default exam date ---
-            const today = new Date().toISOString().split("T")[0];
-            document.getElementById("dateInput").value = today;
-        </script>
-    </body>
-</html>
+<div id="results" style="display: none"></div>
+{% endblock %}

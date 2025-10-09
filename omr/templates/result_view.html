@@ -1,0 +1,84 @@
+{% extends 'base.html' %} {% block title %}OMR Evaluator{% endblock %}
+{% load static %}
+{% block content %}
+
+<h2>Evaluation Results</h2>
+<h2>{{ exam.exam_name }}</h2>
+<h3>{{ exam.org_name }}</h3>
+<div>Date: {{ exam.exam_date|date:"d M Y" }}</div>
+<div>
+    Pass Mark:
+    <strong>{{ exam.pass_mark }}</strong>
+</div>
+<table border="1" id="result-table">
+    <thead>
+        <tr>
+            <th>Roll</th>
+            <th>Score</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in results %}
+        <tr>
+            <td>{{ row.roll_no }}</td>
+            <td>{{ row.score|floatformat:0 }}</td>
+            <td>{% if row.score >= exam.pass_mark %} Pass {% else %} Fail {% endif %}</td>
+            <td>
+                <a href="#overlay-{{ forloop.counter }}">
+                    <button type="button">View Image</button>
+                </a>
+            </td>
+        </tr>
+
+        <!-- Overlay Section -->
+        <div id="overlay-{{ forloop.counter }}" class="overlay">
+            <a href="#" class="close-btn">&times;</a>
+            <img src="{{ row.sheet.url }}" alt="Image Preview" />
+        </div>
+        {% endfor %}
+    </tbody>
+</table>
+
+<button id="download-csv-btn">Download CSV</button>
+<button id="download-xlsx-btn">Download Excel</button>
+
+<button id="download-pdf-btn">Download Sheet PDF</button>
+<div id="progress-container">
+    <div id="progress-bar">0%</div>
+</div>
+
+<h3>Errored Files</h3>
+<form id="csrf-form">{% csrf_token %}</form>
+<table border="1">
+    <thead>
+        <tr>
+            <th>Preview</th>
+            <th>Roll No</th>
+            <th>Score</th>
+            <th>Submit</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for err in errors %}
+        <tr>
+            <td>
+                <a href="#overlay-{{ forloop.counter }}">
+                    <button type="button">View Image</button>
+                </a>
+            </td>
+            <td><input type="number" name="roll_no" class="rollno-input" min="0" max="999999" required /></td>
+            <td><input type="number" name="score" class="score-input" min="0" max="100" required /></td>
+            <td><button type="button" class="submit-btn">Submit</button></td>
+        </tr>
+
+        <!-- Overlay Section -->
+        <div id="overlay-{{ forloop.counter }}" class="overlay">
+            <a href="#" class="close-btn">&times;</a>
+            <img src="{{ err.sheet.url }}" alt="Image Preview" />
+        </div>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

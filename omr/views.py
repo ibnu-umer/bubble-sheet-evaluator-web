@@ -18,7 +18,7 @@ from django.utils.timezone import now
 from .models import Exam, Result, Errors
 import random
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from io import BytesIO
 from reportlab.pdfgen import canvas
 import cv2
@@ -40,7 +40,12 @@ def signup(request):
             return redirect("evaluator")
     else:
         form = UserCreationForm()
-    return render(request, "signup.html", {"form": form})
+    return render(request, "auth/signup.html", {"form": form})
+
+
+def logout_view(request):
+    logout(request)
+    return redirect('login')
 
 
 
@@ -166,12 +171,12 @@ def process_ajax(request):
 
 
 @login_required
-def results_view(request, exam_id):
+def result_view(request, exam_id):
     exam = get_object_or_404(Exam, exam_id=exam_id)
     results = Result.objects.filter(exam=exam)
     errors = Errors.objects.filter(exam=exam)
 
-    return render(request, "results.html", {
+    return render(request, "result_view.html", {
         "exam": exam,
         "results": results,
         "errors": errors
@@ -237,7 +242,7 @@ def submit_mark(request):
 
 
 @csrf_protect
-def sheet_edit(request):
+def create_sheet(request):
     if request.method == "POST":
         template = request.POST.get("sheet_template")
         exam_name = request.POST.get("exam_name")
@@ -277,7 +282,7 @@ def sheet_edit(request):
         return JsonResponse({"image_data": img_base64})
 
     templates = list(TEMPLATE_CONFIG.keys())
-    return render(request, "sheet_edit.html", {"templates": templates})
+    return render(request, "create_sheet.html", {"templates": templates})
 
 
 
@@ -293,3 +298,8 @@ def sheet_download(request):
     response = HttpResponse(pdf_bytes, content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="{get_exam_folder_name(exam_name)}_sheet.pdf"'
     return response
+
+
+
+def results_page(request):
+    return render(request, "results_page.html")

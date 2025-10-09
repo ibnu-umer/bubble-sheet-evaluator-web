@@ -1,0 +1,31 @@
+{% extends 'base.html' %} {% block title %}OMR Evaluator{% endblock %}
+{% load static %}
+{% block content %}
+
+<h2>Results</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Date</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for exam in exams %}
+        <tr>
+            <td>{{ exam.exam_name }}</td>
+            <td>{{ exam.exam_date }}</td>
+            <td>
+                <a href="{% url 'results' exam.exam_id %}">
+                    <button type="button">Show result</button>
+                </a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4">No exams yet.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

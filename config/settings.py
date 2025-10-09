@@ -123,7 +123,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 
-LOGIN_REDIRECT_URL = '/evaluator/'
+LOGIN_REDIRECT_URL = '/exam/evaluator/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
 
 # Default primary key field type

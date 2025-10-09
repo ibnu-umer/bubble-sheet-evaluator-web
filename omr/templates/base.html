@@ -1,0 +1,33 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{% block title %}OMR Evaluator{% endblock %}</title>
+    </head>
+
+    <body>
+        <header class="app-header">
+            <div class="header-container">
+                <div class="logo-section">
+                    <img src="{% static 'images/logo.png' %}" alt="OMR Logo" class="logo" />
+                    <h1 class="app-title">OMR Evaluator</h1>
+                </div>
+
+                <nav class="nav-links">
+                    <a href="{% url 'evaluator' %}">Evaluate</a>
+                    <a href="{% url 'results_page' %}">Results</a>
+                    <a href="{% url 'create_sheet' %}">Create Sheet</a>
+                    <a href="{% url 'logout' %}">Logout</a>
+                </nav>
+            </div>
+        </header>
+
+        <main class="content">
+            {% block content %}
+            <!-- Page-specific content goes here -->
+            {% endblock %}
+        </main>
+    </body>
+</html>

@@ -1,0 +1,100 @@
+{% extends 'base.html' %} {% block title %}OMR Evaluator{% endblock %}
+{% load static %}
+{% block content %}
+
+<h1>Create Answer Sheet</h1>
+
+<form method="post" enctype="multipart/form-data" id="sheet-form" action="{% url 'create_sheet' %}">
+    {% csrf_token %}
+
+    <h2>Select a Sheet Template</h2>
+    <div class="template-options mb-6">
+        {% for t in templates %}
+        <div class="template-card">
+            <input type="radio" id="{{ t }}" name="sheet_template" value="{{ t }}" required />
+            <label for="{{ t }}">{{ t }}</label>
+            <button class="preview-btn" type="button" data-img="{% static 'sheet_images/' %}{{ t }}.png">
+                Preview
+            </button>
+            <button
+                class="download-template-btn bg-green-600 text-white px-3 py-1 rounded"
+                type="button"
+                data-template="{{ t }}"
+            >
+                Download
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- ✅ Template Preview Overlay -->
+    <div class="preview-overlay" id="templateOverlay">
+        <span class="close-btn" id="closeTemplatePreview">&times;</span>
+        <img id="templatePreviewImage" src="" alt="Template Preview" />
+    </div>
+
+    <!-- --- Exam Info --- -->
+    <div class="space-y-4">
+        <div>
+            <label for="exam-name">Exam Name</label>
+            <input name="exam_name" type="text" id="exam-name" class="w-full p-1" required />
+        </div>
+
+        <div>
+            <label>Exam Instructions</label>
+            <div class="space-y-1">
+                <input
+                    name="instruction_1"
+                    maxlength="80"
+                    type="text"
+                    id="instruction_1"
+                    placeholder="1. Instruction"
+                    class="w-full p-1"
+                />
+                <input
+                    name="instruction_2"
+                    maxlength="80"
+                    type="text"
+                    id="instruction_2"
+                    placeholder="2. Instruction"
+                    class="w-full p-1"
+                />
+                <input
+                    name="instruction_3"
+                    maxlength="80"
+                    type="text"
+                    id="instruction_3"
+                    placeholder="3. Instruction"
+                    class="w-full p-1"
+                />
+            </div>
+        </div>
+
+        <div>
+            <label for="exam-date">Exam Date</label>
+            <input name="exam_date" type="date" id="exam-date" class="w-full p-1" required />
+        </div>
+
+        <div>
+            <label>Exam Time</label>
+            <div>
+                <label for="exam-hour">Hour</label>
+                <input name="exam_hour" type="number" id="exam-hour" required min="0" max="23" />
+                <label for="exam-min">Min</label>
+                <input name="exam_min" type="number" id="exam-min" required min="0" max="59" />
+            </div>
+        </div>
+    </div>
+
+    <button type="submit" class="mt-4 px-4 py-2 bg-green-600 text-white rounded">Generate Preview</button>
+</form>
+
+<!-- Sheet Preview Overlay (for generated sheet) -->
+<div class="preview-overlay" id="sheetOverlay">
+    <span class="close-btn" id="closeSheetPreview">&times;</span>
+    <embed id="sheetPreview" type="application/pdf" width="80%" height="90%" />
+</div>
+
+<button id="download-btn" class="mt-6 px-4 py-2 bg-blue-600 text-white rounded">Download Sheet (PDF)</button>
+
+{% endblock %}
