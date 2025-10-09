@@ -1,36 +1,44 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>{% block title %}OMR Evaluator{% endblock %}</title>
-    </head>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}OMR Evaluator{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/base.css' %}" />
+  </head>
 
-    <body>
-        <header class="app-header">
-            <div class="header-container">
-                <div class="logo-section">
-                    <img src="{% static 'images/logo.png' %}" alt="OMR Logo" class="logo" />
-                    <h1 class="app-title">OMR Evaluator</h1>
-                </div>
+  <body>
+    <header class="app-header">
+      <div class="header__container">
+        <div class="header__logo-area">
+          <img
+            src="{% static 'icons/logo.png' %}"
+            alt="OMR Logo"
+            class="header__logo"
+          />
+          <h1 class="header__title">OMR Evaluator</h1>
+        </div>
 
-                <nav class="nav-links">
-                    <a href="{% url 'evaluator' %}">Evaluate</a>
-                    <a href="{% url 'results_page' %}">Results</a>
-                    <a href="{% url 'create_sheet' %}">Create Sheet</a>
-                    <a href="{% url 'logout' %}">Logout</a>
-                </nav>
-            </div>
-        </header>
+        <nav class="nav">
+          <ul class="nav__list">
+            <li><a href="{% url 'evaluator' %}" class="nav__link">Evaluate</a></li>
+            <li><a href="{% url 'results_page' %}" class="nav__link">Results</a></li>
+            <li><a href="{% url 'create_sheet' %}" class="nav__link">Create Sheet</a></li>
+            <li><a href="{% url 'logout' %}" class="nav__link nav__link--logout">Logout</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
 
-        <main class="content">
-            {% block content %}
-            <!-- Page-specific content goes here -->
-            {% endblock %}
-        </main>
+    <main class="page-content">
+      {% block content %}
+      <!-- Page-specific content goes here -->
+      {% endblock %}
+    </main>
 
-        {% block scripts %}
-        {% endblock %}
-    </body>
+    {% block scripts %}
+    {% endblock %}
+  </body>
 </html>
+

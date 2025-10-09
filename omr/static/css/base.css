@@ -1,82 +1,119 @@
+/* ---------- Global Variables ---------- */
+:root {
+  --color-primary: #2563eb;
+  --color-primary-dark: #1e40af;
+  --color-bg: #f9fafb;
+  --color-text: #1f2937;
+  --color-white: #ffffff;
+  --color-border: #e5e7eb;
+  --color-accent: #ef4444;
+
+  --font-main: "Inter", "Segoe UI", sans-serif;
+
+  --transition: 0.2s ease-in-out;
+}
+
+/* ---------- Global Reset ---------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
 body {
-    margin: 0;
-    font-family: "Inter", sans-serif;
-    background-color: #f8fafc;
-    color: #1e293b;
+  height: 100%;
+  font-family: var(--font-main);
+  background-color: var(--color-bg);
+  color: var(--color-text);
 }
 
-.content {
-    padding: 2rem;
-    max-width: 1100px;
-    margin: auto;
-}
-
+/* ---------- Header ---------- */
 .app-header {
-    background: #0f172a;
-    color: #fff;
-    padding: 0.8rem 1.5rem;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    position: sticky;
-    top: 0;
-    z-index: 100;
+  background-color: var(--color-white);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-.header-container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    max-width: 1200px;
-    margin: auto;
+.header__container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.75rem 1.5rem;
 }
 
-.logo-section {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.header__logo-area {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-.logo {
-    width: 38px;
-    height: 38px;
-    object-fit: cover;
+.header__logo {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
 }
 
-.app-title {
-    font-size: 1.4rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
+.header__title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--color-primary-dark);
 }
 
-.nav-links {
-    display: flex;
-    gap: 1.5rem;
+/* ---------- Navigation ---------- */
+.nav__list {
+  list-style: none;
+  display: flex;
+  gap: 1.5rem;
 }
 
-.nav-links a {
-    color: #cbd5e1;
-    text-decoration: none;
-    font-size: 1rem;
-    transition: color 0.2s ease;
+.nav__link {
+  text-decoration: none;
+  font-weight: 500;
+  color: var(--color-text);
+  transition: color var(--transition);
 }
 
-.nav-links a:hover {
-    color: #38bdf8;
+.nav__link:hover {
+  color: var(--color-primary);
 }
 
-.user-section {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.nav__link--logout {
+  color: var(--color-accent);
+  font-weight: 600;
 }
 
-.username {
-    font-size: 0.95rem;
+.nav__link--logout:hover {
+  color: #dc2626;
 }
 
-.user-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: #1e293b;
-    padding: 3px;
+/* ---------- Main Content ---------- */
+.page-content {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+}
+
+/* ---------- Utilities ---------- */
+.text-center {
+  text-align: center;
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.5rem 1.25rem;
+  border-radius: 6px;
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  text-decoration: none;
+  transition: background-color var(--transition);
+}
+
+.btn:hover {
+  background-color: var(--color-primary-dark);
 }
