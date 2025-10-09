@@ -1,79 +1,140 @@
-{% extends 'base.html' %} {% block title %}OMR Evaluator{% endblock %}
-{% load static %}
-{% block content %}
+{% extends 'base.html' %} {% load static %} {% block title %}OMR Evaluator{% endblock %} {% block styles %}
+<link rel="stylesheet" href="{% static 'css/evaluate.css' %}" />
+{% endblock %} {% block content %}
+<section class="page-section evaluate">
+    <header class="section-header">
+        <h1 class="section-title">Evaluate OMR Sheets</h1>
+    </header>
 
-<h1>OMR Evaluation</h1>
-
-{% if messages %}
-<ul>
-    {% for m in messages %}
-    <li>{{ m }}</li>
-    {% endfor %}
-</ul>
-{% endif %}
-
-<form method="post" enctype="multipart/form-data" id="process-form" action="{% url 'evaluator' %}">
-    {% csrf_token %}
-
-    <h2>Select a Sheet Template</h2>
-    <div class="template-options mb-6">
-        {% for t in templates %}
-        <div class="template-card">
-            <input type="radio" id="{{ t }}" name="sheet_template" value="{{ t }}" required />
-            <label for="{{ t }}">{{ t }}</label>
-            <button class="preview-btn" type="button" data-img="{% static 'sheet_images/' %}{{ t }}.png">
-                Preview
-            </button>
-        </div>
+    {% if messages %}
+    <ul class="alert-list">
+        {% for m in messages %}
+        <li class="alert">{{ m }}</li>
         {% endfor %}
-    </div>
+    </ul>
+    {% endif %}
 
-    <div class="preview-overlay" id="previewOverlay">
-        <span class="close-btn" id="closePreview">&times;</span>
-        <img id="previewImage" src="" alt="Template Preview" />
-    </div>
+    <form
+        method="post"
+        enctype="multipart/form-data"
+        id="process-form"
+        class="evaluate__form"
+        action="{% url 'evaluator' %}"
+    >
+        {% csrf_token %}
 
-    <h3>Exam Date</h3>
-    <input for="exam-date" name="exam_date" type="date" id="dateInput" />
+        <!-- Template Selection -->
+        <div class="form-section">
+            <h2 class="form-section__title">Select a Sheet Template</h2>
+            <div class="template-grid">
+                {% for t in templates %}
+                <div class="template-card">
+                    <input
+                        type="radio"
+                        id="{{ t }}"
+                        name="sheet_template"
+                        value="{{ t }}"
+                        required
+                        class="template-card__radio"
+                    />
+                    <label for="{{ t }}" class="template-card__label">{{ t }}</label>
+                    <button
+                        class="btn btn--secondary preview-btn"
+                        type="button"
+                        data-img="{% static 'sheet_images/' %}{{ t }}.png"
+                    >
+                        Preview
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
 
-    <h3>Exam Name</h3>
-    <input for="exam-name" name="exam_name" type="text" required />
+        <!-- Template Preview Overlay -->
+        <div class="preview-overlay" id="previewOverlay">
+            <span class="preview-overlay__close" id="closePreview">&times;</span>
+            <img id="previewImage" src="" alt="Template Preview" class="preview-overlay__image" />
+        </div>
 
-    <h3>College/School Name</h3>
-    <input for="org-name" name="org_name" type="text" required />
+        <!-- Exam Details -->
+        <div class="form-section">
+            <h2 class="form-section__title">Exam Details</h2>
 
-    <h3>Subject</h3>
-    <input for="subject" name="subject" type="text" required />
+            <div class="form-group">
+                <label for="dateInput" class="form-label">Exam Date</label>
+                <input type="date" id="dateInput" name="exam_date" class="form-input" />
+            </div>
 
-    <h3>Pass Mark</h3>
-    <input for="pass-mark" name="pass_mark" type="number" required />
+            <div class="form-group">
+                <label for="exam-name" class="form-label">Exam Name</label>
+                <input type="text" id="exam-name" name="exam_name" class="form-input" required />
+            </div>
 
-    <!-- Upload Section -->
-    <h3>Upload Files</h3>
-    <div>
-        <label for="sheet_upload">Upload Sheet PDFs:</label>
-        <input type="file" name="sheet_files" id="sheet_upload" accept=".pdf" multiple required />
-        <ul id="sheetList"></ul>
-    </div>
+            <div class="form-group">
+                <label for="org-name" class="form-label">College/School Name</label>
+                <input type="text" id="org-name" name="org_name" class="form-input" required />
+            </div>
 
-    <div>
-        <label for="answer_upload">Upload Answer Key (CSV/JSON):</label>
-        <input type="file" name="answer_file" id="answer_upload" accept=".csv,.json" required />
-        <ul id="answerList"></ul>
-    </div>
+            <div class="form-group">
+                <label for="subject" class="form-label">Subject</label>
+                <input type="text" id="subject" name="subject" class="form-input" required />
+            </div>
 
-    <button type="submit" id="process-button">Start Processing</button>
-</form>
+            <div class="form-group">
+                <label for="pass-mark" class="form-label">Pass Mark</label>
+                <input type="number" id="pass-mark" name="pass_mark" class="form-input" required />
+            </div>
+        </div>
 
-<h1>Processing Sheets</h1>
-<div id="progress-container">
-    <div id="progress-bar">0%</div>
-</div>
+        <!-- Upload Section -->
+        <div class="form-section">
+            <h2 class="form-section__title">Upload Files</h2>
 
-<div id="results" style="display: none"></div>
-{% endblock %}
+            <div class="form-group">
+                <label for="sheet_upload" class="form-label">Upload Sheet PDFs</label>
+                <input
+                    type="file"
+                    name="sheet_files"
+                    id="sheet_upload"
+                    class="form-input"
+                    accept=".pdf"
+                    multiple
+                    required
+                />
+                <ul id="sheetList" class="file-list"></ul>
+            </div>
 
+            <div class="form-group">
+                <label for="answer_upload" class="form-label">Upload Answer Key (CSV/JSON)</label>
+                <input
+                    type="file"
+                    name="answer_file"
+                    id="answer_upload"
+                    class="form-input"
+                    accept=".csv,.json"
+                    required
+                />
+                <ul id="answerList" class="file-list"></ul>
+            </div>
+        </div>
 
-{% block scripts %}
+        <section class="form-section">
+            <h2 class="form-section__title">Processing Sheets</h2>
+
+            <div class="progress-wrapper">
+                <button type="submit" id="process-button" class="btn btn--primary">Start Processing</button>
+
+                <div class="progress-container" id="progress-container">
+                    <div class="progress-bar" id="progress-bar"></div>
+                </div>
+
+                <span class="progress-percentage" id="progress-percentage">0%</span>
+            </div>
+        </section>
+    </form>
+
+    <div id="results" class="results"></div>
+</section>
+{% endblock %} {% block scripts %}
 <script src="{% static 'js/evaluate.js' %}"></script>
 {% endblock %}
