@@ -1,0 +1,119 @@
+/* ========== Login Page Styles ========== */
+
+body {
+    margin: 0;
+    font-family: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+    color: #1e293b;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 1rem;
+}
+
+.login-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    padding: 2.5rem 2rem;
+    width: 100%;
+    max-width: 380px;
+    text-align: center;
+}
+
+.login-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1e3a8a;
+    margin-bottom: 0.25rem;
+}
+
+.login-subtitle {
+    color: #64748b;
+    font-size: 0.85rem;  /* smaller, cleaner */
+    margin-bottom: 1.25rem;
+}
+
+.error-msg {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    padding: 0.65rem;  /* slightly smaller padding */
+    margin-bottom: 1rem;
+    font-size: 0.85rem; /* smaller font */
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.95rem; /* slightly tighter spacing */
+}
+
+.form-group {
+    text-align: left;
+}
+
+label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+    color: #334155;
+    font-size: 0.9rem;
+}
+
+input[type="text"],
+input[type="password"] {
+    width: 93%;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    outline: none;
+}
+
+.login-btn {
+    background: #4f46e5;
+    color: #fff;
+    font-weight: 600;
+    padding: 0.7rem; /* slightly smaller */
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: background 0.25s ease;
+}
+
+.login-btn:hover {
+    background: #4338ca;
+}
+
+.signup-text {
+    margin-top: 0.85rem;
+    font-size: 0.85rem;
+    color: #475569;
+}
+
+.signup-text a {
+    color: #16a34a;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.signup-text a:hover {
+    text-decoration: underline;
+}
