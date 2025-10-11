@@ -16,7 +16,7 @@
     padding: 15px;
     width: 220px;
     text-align: center;
-    background: #fff;
+    background: #c9c9c9;
     transition: box-shadow 0.3s ease;
 }
 
@@ -96,16 +96,6 @@
 }
 
 /* Form Styling */
-.form-section {
-    margin-top: 2rem;
-}
-
-.form-section__title {
-    font-size: 1.3rem;
-    margin-bottom: 1rem;
-    font-weight: 600;
-}
-
 .form-group {
     margin-bottom: 1rem;
 }

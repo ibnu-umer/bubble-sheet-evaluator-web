@@ -1,3 +1,30 @@
+// --- Sheet preview overlay ---
+const sheetOverlay = document.getElementById("sheetOverlay");
+const sheetPreviewImage = document.getElementById("sheetPreviewImage");
+const closeSheetPreview = document.getElementById("closeSheetPreview");
+
+document.querySelectorAll(".preview-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+        sheetPreviewImage.src = btn.dataset.img;
+        sheetOverlay.style.display = "flex";
+    });
+});
+
+closeSheetPreview.addEventListener("click", () => {
+    sheetOverlay.style.display = "none";
+    sheetPreviewImage.src = "";
+});
+
+sheetOverlay.addEventListener("click", (e) => {
+    if (e.target === sheetOverlay) {
+        sheetOverlay.style.display = "none";
+        sheetPreviewImage.src = "";
+    }
+});
+
+
+
+
 const examID = "{{ exam.exam_id|safe }}";
 const examName = "{{ exam.exam_name|safe }}";
 const examNameLower = examName.toLowerCase().replace(/\s+/g, "_");

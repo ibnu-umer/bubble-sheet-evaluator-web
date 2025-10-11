@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}OMR Evaluator{% endblock %}
+{% block title %}Evaluated Results{% endblock %}
 
 {% block content %}
 <div class="results-page">
@@ -43,18 +43,17 @@
                     <td class="{% if row.score >= exam.pass_mark %}status-pass{% else %}status-fail{% endif %}">
                         {% if row.score >= exam.pass_mark %} Pass {% else %} Fail {% endif %}
                     </td>
-                    <td class="table-actions">
-                        <a href="#overlay-{{ forloop.counter }}">
-                            <button type="button" class="btn btn-view">View Image</button>
-                        </a>
+                    <td>
+                        <button
+                            class="preview-btn"
+                            type="button"
+                            data-img="{{ row.sheet.url }}"
+                        >
+                        View Image
+                        </button>
                     </td>
                 </tr>
 
-                <!-- Overlay Image Preview -->
-                <div id="overlay-{{ forloop.counter }}" class="overlay">
-                    <a href="#" class="close-btn">&times;</a>
-                    <img src="{{ row.sheet.url }}" alt="Sheet Image Preview" />
-                </div>
                 {% endfor %}
             </tbody>
         </table>
@@ -84,9 +83,13 @@
                 {% for err in errors %}
                 <tr>
                     <td class="table-actions">
-                        <a href="#overlay-error-{{ forloop.counter }}">
-                            <button type="button" class="btn btn-view">View Image</button>
-                        </a>
+                        <button
+                            class="preview-btn"
+                            type="button"
+                            data-img="{{ err.sheet.url }}"
+                        >
+                        View Image
+                        </button>
                     </td>
                     <td>
                         <input
@@ -112,21 +115,23 @@
                         <button type="button" class="btn btn-submit submit-btn">Submit</button>
                     </td>
                 </tr>
-
-                <!-- Overlay Image Preview -->
-                <div id="overlay-error-{{ forloop.counter }}" class="overlay">
-                    <a href="#" class="close-btn">&times;</a>
-                    <img src="{{ err.sheet.url }}" alt="Errored Sheet Preview" />
-                </div>
                 {% endfor %}
             </tbody>
         </table>
+
     </section>
 </div>
+
+<!-- Preview Overlay for Sheet -->
+<div class="preview-overlay" id="sheetOverlay">
+    <span class="close-btn" id="closeSheetPreview">&times;</span>
+    <img id="sheetPreviewImage" src="" alt="Sheet Preview" />
+</div>
+
 {% endblock %}
 
 {% block styles %}
-<link rel="stylesheet" href="{% static 'css/results.css' %}">
+<link rel="stylesheet" href="{% static 'css/result_view.css' %}">
 {% endblock %}
 
 {% block scripts %}

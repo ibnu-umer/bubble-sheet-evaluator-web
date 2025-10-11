@@ -44,7 +44,7 @@
     border: 1px solid #fecaca;
     color: var(--color-error);
     padding: 0.75rem 1rem;
-    border-radius: var(--radius);
+    border-radius: var(--radius-md);
 }
 
 /* Form Layout */
@@ -52,20 +52,6 @@
     display: flex;
     flex-direction: column;
     gap: 2rem;
-}
-
-.form-section {
-    background: var(--color-white);
-    padding: 1rem 1.25rem;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-}
-
-.form-section__title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--color-text);
-    margin-bottom: 1rem;
 }
 
 .form-group {
@@ -81,7 +67,7 @@
 
 .form-input {
     padding: 0.5rem 0.75rem;
-    border-radius: var(--radius);
+    border-radius: var(--radius-md);
     border: 1px solid var(--color-border);
     font-size: 1rem;
     transition: border-color var(--transition);
@@ -108,10 +94,10 @@
 
 .template-card {
     border: 2px solid var(--color-border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-md);
     padding: 1rem;
     text-align: center;
-    background: var(--color-white);
+    background: var(--color-bg);
     transition: box-shadow var(--transition);
 }
 
@@ -134,7 +120,7 @@
 .btn {
     display: inline-block;
     font-weight: 500;
-    border-radius: var(--radius);
+    border-radius: var(--radius-md);
     cursor: pointer;
     transition: background var(--transition), color var(--transition);
     text-align: center;
@@ -181,7 +167,7 @@
 .preview-overlay__image {
     max-width: 90%;
     max-height: 90%;
-    border-radius: var(--radius);
+    border-radius: var(--radius-md);
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
 }
 
@@ -239,7 +225,7 @@
     padding: 8px 16px;
     border-radius: 6px;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: var(--prog-transition);
     height: 40px;
 }
 
