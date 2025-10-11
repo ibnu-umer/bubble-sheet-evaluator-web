@@ -3,7 +3,7 @@
 {% block title %}Results | OMR Evaluator{% endblock %}
 
 {% block content %}
-<section class="page-section results-list">
+<section class="page-section">
     <header class="section-header">
         <h1 class="section-title">Results</h1>
     </header>
@@ -14,7 +14,7 @@
                 <tr>
                     <th>Exam Name</th>
                     <th>Date</th>
-                    <th>Action</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -23,8 +23,11 @@
                     <td class="exam-name">{{ exam.exam_name }}</td>
                     <td class="exam-date">{{ exam.exam_date|date:"d M Y" }}</td>
                     <td class="table-actions">
-                        <a href="{% url 'results' exam.exam_id %}">
-                            <button type="button" class="btn btn-view">Show Result</button>
+                        <a href="{% url 'result_view' exam.exam_id %}">
+                            <button type="button" class="btn btn-view">
+                                <img src="{% static 'icons/view.png' %}" alt="View" class="btn__icon" />
+                                Show Result
+                            </button>
                         </a>
                     </td>
                 </tr>

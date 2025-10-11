@@ -1,92 +1,15 @@
-.results-page {
-    padding: 2rem;
-    background-color: var(--color-primary);
-    color: var(--color-text);
-}
-
-/* ---------- TABLE ---------- */
-.results-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 2rem 0;
-    background: var(--color-bg);
-    box-shadow: var(--shadow);
-    border-radius: var(--radius--md);
-    overflow: hidden;
-}
-
-.results-table th,
-.results-table td {
-    padding: 0.8rem 1rem;
-    border-bottom: 1px solid var(--color-border);
+.result-header {
     text-align: center;
 }
 
-.results-table th {
-    background-color: var(--color-primary);
-    color: var(--color-primary-dark);
-    font-weight: 600;
+.meta-item {
+    margin: 0 var(--gap-sm);
 }
 
-.results-table tr:hover {
-    background-color: var(--color-bg-hover);
-    transition: background 0.2s ease;
-}
-
-/* ---------- BUTTONS ---------- */
-.table-actions {
+.results-section {
     display: flex;
-    gap: 0.5rem;
-    justify-content: center;
-}
-
-.table-actions button {
-    background-color: var(--color-primary);
-    color: #fff;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: background 0.2s ease;
-}
-
-.table-actions button:hover {
-    background-color: var(--color-primary-dark);
-}
-
-/* ---------- OVERLAY ---------- */
-.overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(10, 10, 10, 0.85);
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.overlay:target {
-    display: flex;
-}
-
-.overlay img {
-    max-width: 80%;
-    max-height: 80%;
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow);
-}
-
-.close-btn {
-    position: absolute;
-    top: 2rem;
-    right: 3rem;
-    color: #fff;
-    font-size: 2rem;
-    text-decoration: none;
+    flex-direction: row;
+    gap: var(--gap-lg);
 }
 
 /* ---------- PROGRESS BAR ---------- */
@@ -113,6 +36,8 @@
 /* ---------- DOWNLOAD BUTTONS ---------- */
 .download-buttons {
     display: flex;
+    flex-direction: column;
+    width: 300px;
     gap: 1rem;
     justify-content: flex-start;
     margin-bottom: 2rem;
@@ -129,7 +54,7 @@
 }
 
 .download-buttons button:hover {
-    background-color: var(--accent-dark);
+    background-color: var(--color-accent-dark);
 }
 
 /* ---------- ERROR TABLE ---------- */

@@ -4,7 +4,7 @@
 
 
 {% block content %}
-<section class="page-section create-sheet">
+<section class="page-section">
     <header class="section-header">
         <h1 class="section-title">Create Answer Sheet</h1>
     </header>
@@ -43,7 +43,7 @@
                             Preview
                         </button>
 
-                        <button class="btn btn--success download-template-btn" type="button" data-template="{{ t }}">
+                        <button class="btn" type="button" data-template="{{ t }}">
                             Download
                         </button>
                     </div>
@@ -52,11 +52,6 @@
             </div>
         </div>
 
-        <!-- Preview Overlay for Template -->
-        <div class="preview-overlay" id="templateOverlay">
-            <span class="close-btn" id="closeTemplatePreview">&times;</span>
-            <img id="templatePreviewImage" src="" alt="Template Preview" />
-        </div>
 
         <!-- Exam Information -->
         <div class="form-section">
@@ -71,15 +66,15 @@
                 <label class="form-label">Exam Instructions</label>
                 <div class="instruction-list">
                     <input
-                        name="instruction_1"
+                    name="instruction_1"
                         maxlength="80"
                         type="text"
                         id="instruction_1"
                         placeholder="1. Instruction"
                         class="form-input"
-                    />
+                        />
                     <input
-                        name="instruction_2"
+                    name="instruction_2"
                         maxlength="80"
                         type="text"
                         id="instruction_2"
@@ -87,7 +82,7 @@
                         class="form-input"
                     />
                     <input
-                        name="instruction_3"
+                    name="instruction_3"
                         maxlength="80"
                         type="text"
                         id="instruction_3"
@@ -124,17 +119,22 @@
                         required
                         min="0"
                         max="59"
-                    />
+                        />
                 </div>
             </div>
-        </div>
-
-        <!-- Form Actions -->
-        <div class="form-actions">
-            <button type="submit" class="btn btn--primary">Generate Preview</button>
-            <button id="download-btn" class="btn btn--success">Download Sheet (PDF)</button>
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <button type="submit" class="btn btn--primary">Generate Preview</button>
+                <button id="download-btn" class="btn btn--success">Download Sheet (PDF)</button>
+            </div>
         </div>
     </form>
+
+    <!-- Preview Overlay for Template -->
+    <div class="preview-overlay" id="templateOverlay">
+        <span class="close-btn" id="closeTemplatePreview">&times;</span>
+        <img id="templatePreviewImage" src="" alt="Template Preview" />
+    </div>
 
     <!-- Sheet Preview Overlay (for generated sheet) -->
     <div class="preview-overlay" id="sheetOverlay">

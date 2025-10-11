@@ -194,16 +194,14 @@ body {
 }
 
 .preview-btn {
-    padding: 8px;
+    background-color: transparent;
+    border: none;
     color: #000;
-    border-radius: var(--radius-sm);
-    background: #f0ffff;
-    border-color: #d3d1d1;
     cursor: pointer;
 }
 
 .preview-btn:hover {
-    background: #70cdcd;
+    color: #2f00ff;
 }
 
 .form-section {
@@ -211,7 +209,7 @@ body {
     background: var(--color-white);
     padding: 1rem 1.25rem;
     border: 1px solid var(--color-border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-md);
 }
 
 .form-section__title {

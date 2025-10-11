@@ -1,11 +1,9 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}OMR Evaluator{% endblock %} {% block styles %}
-<link rel="stylesheet" href="{% static 'css/evaluate.css' %}" />
-{% endblock %}
+{% block title %}OMR Evaluator{% endblock %}
 
 {% block content %}
-<section class="page-section evaluate">
+<section class="page-section">
     <header class="section-header">
         <h1 class="section-title">Evaluate OMR Sheets</h1>
     </header>
@@ -140,8 +138,13 @@
             </div>
         </section>
     </form>
-
 </section>
+
+
+{% block styles %}
+<link rel="stylesheet" href="{% static 'css/evaluate.css' %}" />
+<link rel="stylesheet" href="{% static 'css/create_sheet.css' %}" />
+{% endblock %}
 
 
 {% endblock %} {% block scripts %}
