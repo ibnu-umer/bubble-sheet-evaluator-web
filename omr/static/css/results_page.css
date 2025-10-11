@@ -1,53 +1,64 @@
-/* results_list.css */
-
-.results-list {
-    padding: 2rem;
-}
-
 .results-table {
     width: 100%;
     border-collapse: collapse;
-    background: #fff;
-    border-radius: 10px;
+    background: var(--color-white);
+    border-radius: var(--radius-md);
     overflow: hidden;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow);
 }
 
 .results-table th,
 .results-table td {
-    padding: 12px 16px;
-    border-bottom: 1px solid #e0e0e0;
+    padding: var(--gap-md) var(--gap-lg);
+    border-bottom: var(--border);
     text-align: left;
 }
 
 .results-table th {
-    background: #f7f7f7;
-    font-weight: 600;
+    background: var(--color-table-th);
+    font-weight: var(--fsw-md);
     text-transform: uppercase;
-    font-size: 0.9rem;
+    font-size: var(--fs-main);
+    font-weight: var(--fsw-md);
 }
 
 .results-table tr:hover {
-    background: #fafafa;
+    background: var(--color-table-hover);
 }
 
-.table-actions .btn-view {
-    background-color: #007bff;
+.table-actions {
     color: white;
     border: none;
     padding: 6px 12px;
     border-radius: 6px;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: var(--transition);
+}
+
+.table-actions .btn-view {
+    background-color: var(--color-table-btn);
 }
 
 .table-actions .btn-view:hover {
-    background-color: #0056b3;
+    background-color: var(--color-table-btn-hover);
 }
 
 .no-data {
     text-align: center;
-    color: #777;
+    color: var(--color-muted);
     font-style: italic;
-    padding: 1rem;
+    padding: var(--fs-main);
+}
+
+.btn__icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    vertical-align: middle;
+    filter: brightness(0) invert(1); /* ensures white icon on primary button */
+    transition: filter var(--transition);
+}
+
+.btn:hover .btn__icon {
+    filter: brightness(1.1);
 }

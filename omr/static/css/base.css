@@ -11,6 +11,10 @@
     --color-accent-dark: #7d2323;
     --color-error: #c34848;
     --color-bg-hover: #e3e3e3;
+    --color-table-th: #dadedf;
+    --color-table-hover: #fafafa;
+    --color-table-btn: #87b7cb;
+    --color-table-btn-hover: #003cff;
 
     --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 
@@ -22,7 +26,16 @@
     --radius-sm: 8px;
     --radius-md: 12px;
 
+    --gap-sm: 8px;
+    --gap-md: 12px;
+    --gap-lg: 16px;
+
     --fsw-md: 700;
+    --fsw-sm: 600;
+    --fs-main: 14px;
+    --fs-header: 18px;
+
+    --border: 1px solid var(--color-border);
 }
 
 /* ---------- Global Reset ---------- */
@@ -111,6 +124,17 @@ body {
     padding: 0 1.5rem;
 }
 
+.page-section {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding: 1rem;
+}
+
+.section-header {
+    margin-bottom: 1rem;
+}
+
 /* ---------- Utilities ---------- */
 .text-center {
     text-align: center;
@@ -129,6 +153,13 @@ body {
 .btn:hover {
     background-color: var(--color-primary-dark);
 }
+
+.section-title {
+    font-size: 1.75rem;
+    font-weight: var(--fsw-md);
+    color: var(--color-primary-dark);
+}
+
 
 /* Overlay Modal */
 .preview-overlay {

@@ -302,4 +302,5 @@ def sheet_download(request):
 
 
 def results_page(request):
-    return render(request, "results_page.html")
+    exams = Exam.objects.filter(user=request.user)
+    return render(request, "results_page.html", {'exams': exams})
