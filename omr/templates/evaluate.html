@@ -1,6 +1,10 @@
-{% extends 'base.html' %} {% load static %} {% block title %}OMR Evaluator{% endblock %} {% block styles %}
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}OMR Evaluator{% endblock %} {% block styles %}
 <link rel="stylesheet" href="{% static 'css/evaluate.css' %}" />
-{% endblock %} {% block content %}
+{% endblock %}
+
+{% block content %}
 <section class="page-section evaluate">
     <header class="section-header">
         <h1 class="section-title">Evaluate OMR Sheets</h1>
@@ -16,10 +20,9 @@
 
     <form
         method="post"
-        enctype="multipart/form-data"
         id="process-form"
+        data-url="{% url 'process_ajax' %}"
         class="evaluate__form"
-        action="{% url 'evaluator' %}"
     >
         {% csrf_token %}
 
@@ -130,11 +133,17 @@
 
                 <span class="progress-percentage" id="progress-percentage">0%</span>
             </div>
+
+            <div id="results" class="result-section">
+                <label class="result-text">Processing completed successfully!</label>
+                <a id="result-link" class="result-link">View Results</a>
+            </div>
         </section>
     </form>
 
-    <div id="results" class="results"></div>
 </section>
+
+
 {% endblock %} {% block scripts %}
 <script src="{% static 'js/evaluate.js' %}"></script>
 {% endblock %}

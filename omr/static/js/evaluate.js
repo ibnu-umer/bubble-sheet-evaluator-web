@@ -59,6 +59,8 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
+
+
 const processButton = document.getElementById("process-button");
 document.getElementById("process-form").addEventListener("submit", async function (event) {
     event.preventDefault(); // stop normal submit
@@ -90,7 +92,8 @@ document.getElementById("process-form").addEventListener("submit", async functio
     }
 
     // Send request
-    const response = await fetch("{% url 'process_ajax' %}", {
+    const processUrl = form.dataset.url;
+    const response = await fetch(processUrl, {
         method: "POST",
         headers: {
             "X-CSRFToken": "{{ csrf_token }}",
@@ -107,23 +110,22 @@ document.getElementById("process-form").addEventListener("submit", async functio
         // progress bar
         if (data.progress !== undefined) {
             const bar = document.getElementById("progress-bar");
+            const prog_percentage = document.getElementById("progress-percentage");
             if (bar) {
                 bar.style.width = data.progress + "%";
-                bar.innerText = data.progress + "%";
+                prog_percentage.textContent = data.progress + "%";
             }
         }
 
         // results
         if (data.exam_id) {
             const resultsDiv = document.getElementById("results");
+            const resultLink = document.getElementById("result-link");
             if (resultsDiv) {
                 resultsDiv.style.display = "block";
-                resultsDiv.innerHTML = `
-                                <p>Processing completed successfully!</p>
-                                <a href="/results/${data.exam_id}/" class="btn btn-primary">
-                                    View Results
-                                </a>
-                            `;
+                resultsDiv.style.display = "flex";
+                resultLink.href = `/exam/results/${data.exam_id}/`;
+                resultLink.target = "_blank";
             }
         }
         console.log("Chunk received:", data);
@@ -161,6 +163,8 @@ document.getElementById("process-form").addEventListener("submit", async functio
     processButton.textContent = "Process Sheets";
 });
 
+
+
 // --- Preview handling ---
 const previewButtons = document.querySelectorAll(".preview-btn");
 const overlay = document.getElementById("previewOverlay");
@@ -186,6 +190,8 @@ overlay.addEventListener("click", (e) => {
         previewImage.src = "";
     }
 });
+
+
 
 // --- Default exam date ---
 const today = new Date().toISOString().split("T")[0];
