@@ -1,10 +1,10 @@
-# OMR Evaluation System
+# 🧑‍🏫 OMR Evaluation System
 
 **Author:** Muhammad Riyas
 **Date:** 20/09/2025
 
 
-## Overview
+## ⚙️ Overview
 
 The **OMR Evaluation System** is a Django-based web application that automates the evaluation of OMR sheets. It is designed to save teachers and exam administrators time and reduce errors in scoring large batches of exam sheets.
 
@@ -19,7 +19,7 @@ Key features:
 - Local storage by default (privacy-focused)
 
 
-## Project Documentation
+## 📄 Project Documentation
 
 The `/docs` folder contains all key project documents:
 
@@ -33,12 +33,12 @@ The `/docs` folder contains all key project documents:
 | `roadmap.md` | MVP development plan (day-by-day) |
 
 
-## Folder Structure
+## 📂 Folder Structure
 
 The main project structure is available in [`docs/folder_structure.md`](docs/folder_structure.md).
 
 
-## Getting Started
+## 💫 Getting Started
 
 ### Prerequisites
 - Python 3.9+
@@ -72,7 +72,7 @@ python manage.py runserver
 Access the app at http://127.0.0.1:8000/.
 
 
-## Testing
+## 🧪 Testing
 
 - **Unit tests** for processing modules: `/processing/tests/`
 - **Django app tests**: `/omr/tests/`
@@ -85,7 +85,7 @@ python manage.py test
 ```
 
 
-## Future Enhancements
+## ⏳ Future Enhancements
 
 - Multi-template OMR support
 - Student login portal
@@ -93,12 +93,12 @@ python manage.py test
 - Cloud/SaaS deployment
 
 
-## License
+## 🪪 License
 
 This project is for **personal/educational use**. Commercial use requires explicit permission from the author.
 
 
-## Contact
+## ☎️ Contact
 
 **Author:** Muhammad Riyas
 **Email:** `muhammadriyask11@gmail.com`
